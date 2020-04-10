@@ -4,7 +4,7 @@ import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import locale from 'element-ui/lib/locale/lang/en' // lang i18n
+import locale from 'element-ui/lib/locale/lang/zh-CN' // lang i18n
 
 import '@/styles/index.scss' // global css
 
@@ -34,7 +34,22 @@ Vue.use(ElementUI, { locale })
 // Vue.use(ElementUI)
 
 Vue.config.productionTip = false
-
+Vue.directive('has', {
+  bind: function (el, binding, vnode) { },
+  inserted: function (el, binding, vnode, oldVnode) {
+    const funs = vnode.context.$route.meta.fun;
+    if (funs) {
+      const hadfun = funs.filter(item => {
+        return item.title === binding.value.fun
+      })
+      if (hadfun.length === 0) {
+        el.parentNode.removeChild(el);
+      }
+    } else {
+      el.parentNode.removeChild(el);
+    }
+  }
+});
 new Vue({
   el: '#app',
   router,

@@ -1,5 +1,5 @@
 import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
 import { resetRouter } from '@/router'
 
 const getDefaultState = () => {
@@ -34,6 +34,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
         setToken(response.token)
+        setMenus(JSON.stringify(response.menulist));
         commit('SET_TOKEN', response.token)
         resolve()
       }).catch(error => {
@@ -63,6 +64,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         removeToken() // must remove  token  first
+        removeMenus()
         resetRouter()
         commit('RESET_STATE')
         resolve()

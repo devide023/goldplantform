@@ -14,7 +14,7 @@ module.exports = {
   // add your custom rules here
   //it is base on https://github.com/vuejs/eslint-config-vue
   rules: {
-    "vue/max-attributes-per-line": [2, {
+    "vue/max-attributes-per-line": [0, {
       "singleline": 10,
       "multiline": {
         "max": 1,
@@ -26,7 +26,7 @@ module.exports = {
     "vue/name-property-casing": ["error", "PascalCase"],
     "vue/no-v-html": "off",
     'accessor-pairs': 2,
-    'arrow-spacing': [2, {
+    'arrow-spacing': [0, {
       'before': true,
       'after': true
     }],
@@ -46,22 +46,22 @@ module.exports = {
     'constructor-super': 2,
     'curly': [2, 'multi-line'],
     'dot-location': [2, 'property'],
-    'eol-last': 2,
+    'eol-last': 0,
     'eqeqeq': ["error", "always", { "null": "ignore" }],
     'generator-star-spacing': [2, {
       'before': true,
       'after': true
     }],
     'handle-callback-err': [2, '^(err|error)$'],
-    'indent': [2, 2, {
+    'indent': [0, 2, {
       'SwitchCase': 1
     }],
     'jsx-quotes': [2, 'prefer-single'],
-    'key-spacing': [2, {
+    'key-spacing': [0, {
       'beforeColon': false,
       'afterColon': true
     }],
-    'keyword-spacing': [2, {
+    'keyword-spacing': [0, {
       'before': true,
       'after': true
     }],
@@ -150,7 +150,7 @@ module.exports = {
     'no-useless-computed-key': 2,
     'no-useless-constructor': 2,
     'no-useless-escape': 0,
-    'no-whitespace-before-property': 2,
+    'no-whitespace-before-property': 0,
     'no-with': 2,
     'one-var': [2, {
       'initialized': 'never'
@@ -171,8 +171,8 @@ module.exports = {
       'before': false,
       'after': true
     }],
-    'space-before-blocks': [2, 'always'],
-    'space-before-function-paren': [2, 'never'],
+    'space-before-blocks': [0, 'always'],
+    'space-before-function-paren': [0, 'never'],
     'space-in-parens': [2, 'never'],
     'space-infix-ops': 2,
     'space-unary-ops': [2, {
@@ -188,9 +188,9 @@ module.exports = {
     'wrap-iife': [2, 'any'],
     'yield-star-spacing': [2, 'both'],
     'yoda': [2, 'never'],
-    'prefer-const': 2,
+    'prefer-const': 0,
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
-    'object-curly-spacing': [2, 'always', {
+    'object-curly-spacing': [0, 'always', {
       objectsInObjects: false
     }],
     'array-bracket-spacing': [2, 'never']

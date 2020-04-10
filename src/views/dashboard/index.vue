@@ -1,16 +1,29 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text"></div>
+    <div class="dashboard-text">
+      <el-button type @click="display()"></el-button>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
-
+import { getMenus } from "@/utils/auth";
 export default {
   name: "Dashboard",
+  data() {
+    return {
+      list: []
+    };
+  },
   computed: {
     ...mapGetters(["name"])
+  },
+  methods: {
+    display() {
+      this.list = getMenus();
+      console.log(this.list);
+    }
   }
 };
 </script>

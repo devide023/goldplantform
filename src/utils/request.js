@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { MessageBox, Message } from 'element-ui'
+import { MessageBox, Message, Loading } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 
@@ -9,12 +9,17 @@ const service = axios.create({
   // withCredentials: true, // send cookies when cross-domain requests
   timeout: 5000 // request timeout
 })
-
+let loadingInstance
 // request interceptor
 service.interceptors.request.use(
   config => {
     // do something before request is sent
-
+    loadingInstance = Loading.service({
+      lock: true,
+      text: 'Loading',
+      spinner: 'el-icon-loading',
+      background: 'rgba(0, 0, 0, 0.7)'
+    });
     if (store.getters.token) {
       // let each request carry token
       // ['X-Token'] is a custom headers key
@@ -24,6 +29,7 @@ service.interceptors.request.use(
     return config
   },
   error => {
+    loadingInstance.close();
     // do something with request error
     console.log(error) // for debug
     return Promise.reject(error)
@@ -43,12 +49,13 @@ service.interceptors.response.use(
    * You can also judge the status by HTTP Status Code
    */
   response => {
+    loadingInstance.close();
     const res = response.data
 
     // if the custom code is not 20000, it is judged as an error.
     if (res.code !== 1) {
       Message({
-        message: res.message || 'Error',
+        message: res.msg || 'Error',
         type: 'error',
         duration: 5 * 1000
       })
@@ -74,7 +81,7 @@ service.interceptors.response.use(
   error => {
     console.log('err' + error) // for debug
     Message({
-      message: error.message,
+      message: error.msg,
       type: 'error',
       duration: 5 * 1000
     })

@@ -1,12 +1,11 @@
 import request from '@/utils/request';
 
 export default {
-    list: function (data) {
+    user_header: function (data) {
         return request({
             method: 'post',
-            url: '/organize/list',
-            data: data
+            url: '/user/headimg',
+            data
         });
     }
 }
-

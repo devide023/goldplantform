@@ -1,6 +1,7 @@
 import request from '@/utils/request'
 
 export default {
+    head_image_path: request.defaults.baseURL + '/user/headimg',
     userlist: function (data) {
         return request({
             method: 'post',

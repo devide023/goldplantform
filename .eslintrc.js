@@ -179,7 +179,7 @@ module.exports = {
       'words': true,
       'nonwords': false
     }],
-    'spaced-comment': [2, 'always', {
+    'spaced-comment': [0, 'always', {
       'markers': ['global', 'globals', 'eslint', 'eslint-disable', '*package', '!', ',']
     }],
     'template-curly-spacing': [2, 'never'],

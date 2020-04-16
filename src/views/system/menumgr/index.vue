@@ -51,6 +51,13 @@ export default {
     return {
       dialogtitle: "新增菜单",
       dialogshow: false,
+      searchdata: {
+        status: "",
+        pid: 0,
+        key: "",
+        ksrq: "",
+        jsrq: ""
+      },
       list: [],
       form_menu: {
         name: "",
@@ -70,7 +77,13 @@ export default {
   },
   methods: {
     getlist() {
-      MenuFun.list({}).then(res => {
+      MenuFun.list({
+        pid: this.searchdata.pid,
+        key: this.searchdata.key,
+        ksrq: this.searchdata.ksrq,
+        jsrq: this.searchdata.jsrq,
+        pagesize: this.pagesize
+      }).then(res => {
         this.list = res.result.data;
         this.recordcount = res.result.total;
       });

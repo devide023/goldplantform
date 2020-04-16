@@ -34,6 +34,18 @@ Vue.use(ElementUI, { locale })
 // Vue.use(ElementUI)
 
 Vue.config.productionTip = false
+Vue.filter('statusname', function (value) {
+  let ret = '';
+  switch (value) {
+    case 0:
+      ret = '禁用';
+      break;
+    case 1:
+      ret = '启用';
+      break;
+  }
+  return ret;
+});
 Vue.directive('has', {
   bind: function (el, binding, vnode) { },
   inserted: function (el, binding, vnode, oldVnode) {

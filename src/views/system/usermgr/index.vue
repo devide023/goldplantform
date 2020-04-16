@@ -15,7 +15,9 @@
     <el-table :data="list" @selection-change="handleSelectionChange">
       >
       <el-table-column type="selection" width="55" show-overflow-tooltip></el-table-column>
-      <el-table-column label="状态" width="70" prop="status"></el-table-column>
+      <el-table-column label="状态" width="70">
+        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+      </el-table-column>
       <el-table-column label="代号" prop="usercode" width="80"></el-table-column>
       <el-table-column label="姓名" prop="name" width="80"></el-table-column>
       <el-table-column label="性别" width="50">
@@ -77,6 +79,14 @@
         <el-form-item label="登录密码" prop="password">
           <el-input type="password" v-model="userform.password"></el-input>
         </el-form-item>
+        <el-form-item label="出生日期">
+          <el-date-picker
+            v-model="userform.birthday"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="出生日期"
+          ></el-date-picker>
+        </el-form-item>
         <el-form-item label="身份证号">
           <el-input type="text" v-model="userform.idno"></el-input>
         </el-form-item>
@@ -86,12 +96,14 @@
         <el-form-item label="邮箱地址">
           <el-input type="email" v-model="userform.email"></el-input>
         </el-form-item>
-        <el-form-item label="联系地址" prop="userprovince">
+        <el-form-item label="联系地址">
           <el-cascader
             v-model="provinces"
             :props="city_props"
             :show-all-levels="true"
             @change="choosed_province"
+            placeholder="请选择省市区"
+            ref="ddl_province"
           ></el-cascader>
           <el-input type="text" v-model="userform.adress" placeholder="街道门牌" style="width:65%"></el-input>
         </el-form-item>
@@ -110,12 +122,14 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="所属组织" prop="userorg">
+        <el-form-item label="所属组织">
           <el-cascader
             v-model="orgids"
             :props="props"
             :show-all-levels="false"
             @change="selected_org"
+            placeholder="请选择组织架构"
+            ref="ddl_orgids"
           ></el-cascader>
         </el-form-item>
       </el-form>
@@ -133,6 +147,7 @@ import UserFun from "@/api/usermgr/index";
 import OrgFun from "@/api/organizemgr/index";
 import ProvinceFun from "@/api/utils/province";
 import { getToken } from "@/utils/auth";
+import Tool from "@/api/utils/tool";
 export default {
   components: {
     "query-bar": QueryBar
@@ -157,6 +172,7 @@ export default {
         usercode: "",
         username: "",
         password: "",
+        birthday: "",
         idno: "",
         tel: "",
         email: "",
@@ -164,7 +180,8 @@ export default {
         headimg: "",
         province: 0,
         city: 0,
-        district: 0
+        district: 0,
+        organizeids: []
       },
 
       city_props: {
@@ -227,7 +244,7 @@ export default {
             type: "array",
             required: true,
             message: "请选择地区",
-            trigger: "blur"
+            trigger: ["blur", "change"]
           }
         ],
         userorg: [
@@ -235,7 +252,7 @@ export default {
             type: "array",
             required: true,
             message: "请选择组织机构",
-            trigger: "blur"
+            trigger: ["blur", "change"]
           }
         ]
       },
@@ -271,6 +288,18 @@ export default {
     saveuserinfo() {
       this.$refs["userform"].validate(v => {
         if (v) {
+          if (
+            this.userform.province === 0 ||
+            this.userform.city === 0 ||
+            this.userform.district === 0
+          ) {
+            this.$message.error("请选择地区");
+            return false;
+          }
+          if (this.orgids.length === 0) {
+            this.$message.error("请选择组织");
+            return false;
+          }
           UserFun.add(this.userform).then(res => {
             this.$message.info(res.msg);
             if (res.code === 1) {
@@ -283,6 +312,17 @@ export default {
         }
       });
     },
+    useredit(user) {
+      this.userform = user;
+      this.userform.username = user.name;
+      this.userform.birthday = user.birthdate;
+      this.headerUrl = Tool.baseurl + "/storage/" + this.userform.headimg;
+      this.formtitle = "编辑用户";
+      this.dialogVisible = true;
+      if (user.province !== 0 && user.city !== 0 && user.district) {
+        this.provinces = [user.province, user.city, user.district];
+      }
+    },
     handleSelectionChange() {},
     handleCurrentChange(index) {
       this.pageindex = index;
@@ -292,8 +332,12 @@ export default {
       this.pagesize = value;
       this.getlist();
     },
-    selected_org(n) {},
+    selected_org(n) {
+      console.log(n);
+      this.userform.organizeids = n;
+    },
     choosed_province(value) {
+      console.log(value);
       if (value.length >= 3) {
         this.userform.province = value[0];
         this.userform.city = value[1];

@@ -7,6 +7,9 @@
           <el-table-column label="请求方式" prop="method"></el-table-column>
         </el-table>
       </el-tab-pane>
+      <el-tab-pane label="功能简码" name="funcode"></el-tab-pane>
+      <el-tab-pane label="菜单类型" name="menutype"></el-tab-pane>
+      <el-tab-pane label="系统配置" name="config"></el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -16,7 +19,7 @@ import BaseFun from "@/api/baseinfo/index";
 export default {
   data() {
     return {
-      activetab: "",
+      activetab: "route",
       list: [],
       routelist: []
     };

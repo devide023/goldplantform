@@ -20,5 +20,11 @@ export default {
             url: '/baseinfo/routes',
             method: 'get'
         })
+    },
+    freshroutelist: function () {
+        return request({
+            url: '/baseinfo/freshroute',
+            method: 'get'
+        })
     }
 }

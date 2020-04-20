@@ -86,13 +86,13 @@ import { rules } from '../../../../.eslintrc';
             <el-option
               v-for="(item,index) in routelist"
               :key="index"
-              :label="item.url"
-              :value="item.url"
+              :label="item.route"
+              :value="item.id"
             >
-              <span style="float: left">{{ item.url }}</span>
+              <span style="float: left">{{ item.route }}</span>
               <span
                 style="float: right;margin-right:20px; color: #8492a6; font-size: 13px"
-              >{{ item.method }}</span>
+              >{{ item.note }}</span>
             </el-option>
           </el-select>
         </el-form-item>

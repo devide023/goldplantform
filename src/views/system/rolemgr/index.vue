@@ -1,3 +1,4 @@
+import { rules } from '../../../../.eslintrc';
 <template>
   <div>
     <query-bar @query="queryhandle">
@@ -22,8 +23,8 @@
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="edit_role(scope.row)">编辑</el-dropdown-item>
-              <el-dropdown-item @click.native="role_user(scope.row)">角色用户</el-dropdown-item>
-              <el-dropdown-item @click.native="role_route(scope.row)">角色路由</el-dropdown-item>
+              <el-dropdown-item @click.native="role_user(scope.row)">用户</el-dropdown-item>
+              <el-dropdown-item @click.native="role_route(scope.row)">路由</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -40,16 +41,66 @@
       background
       style="text-align:right;"
     ></el-pagination>
-    <el-dialog :title="dialogtitle" :visible.sync="dialogvisiable" top="10px">
-      <el-form :model="formrole" label-width="80px" label-position="right" size="small">
-        <el-form-item label="角色名称">
+    <el-dialog :title="dialogtitle" :visible.sync="dialogvisiable" top="10px" :rules="rules">
+      <el-form
+        :model="formrole"
+        ref="formrole"
+        :rules="rules"
+        label-width="80px"
+        label-position="right"
+        size="small"
+      >
+        <el-form-item label="角色名称" prop="name">
           <el-input v-model="formrole.name" placeholder="请输入角色名称"></el-input>
+        </el-form-item>
+        <el-form-item label="关联用户" prop="users">
+          <el-select
+            v-model="formrole.users"
+            :multiple="true"
+            :filterable="true"
+            placeholder="请选择用户"
+            style="width:100%;"
+          >
+            <el-option
+              v-for="(item,index) in userlist"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            >
+              <span style="float: left">{{ item.name }}</span>
+              <span
+                style="float: right;margin-right:20px; color: #8492a6; font-size: 13px"
+              >{{ item.usercode }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联路由" required prop="routes">
+          <el-select
+            v-model="formrole.routes"
+            :filterable="true"
+            :multiple="true"
+            :collapse-tags="true"
+            placeholder="请选择路由"
+            style="width:100%;"
+          >
+            <el-option
+              v-for="(item,index) in routelist"
+              :key="index"
+              :label="item.url"
+              :value="item.url"
+            >
+              <span style="float: left">{{ item.url }}</span>
+              <span
+                style="float: right;margin-right:20px; color: #8492a6; font-size: 13px"
+              >{{ item.method }}</span>
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="备注">
           <el-input
             v-model="formrole.note"
             type="textarea"
-            :autosize="{ minRows: 6, maxRows: 10}"
+            :autosize="{ minRows: 3, maxRows: 6}"
             placeholder="备注"
           ></el-input>
         </el-form-item>
@@ -65,6 +116,8 @@
 <script>
 import QueryBar from "@/components/QueryBar/querybar";
 import RoleFun from "@/api/rolemgr/index";
+import BaseFun from "@/api/baseinfo/index";
+import UserFun from "@/api/usermgr/index";
 export default {
   components: {
     "query-bar": QueryBar
@@ -73,9 +126,37 @@ export default {
     return {
       dialogtitle: "新增角色",
       searchdata: {},
+      routelist: [],
+      userlist: [],
       list: [],
+      selectedrows: [],
       dialogvisiable: false,
-      formrole: {},
+      formrole: {
+        status: 1,
+        routes: [],
+        users: [],
+        name: "",
+        note: ""
+      },
+      rules: {
+        name: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
+        users: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择角色关联的用户",
+            trigger: "change"
+          }
+        ],
+        routes: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择角色关联的路由",
+            trigger: "change"
+          }
+        ]
+      },
       recordcount: 0,
       pageindex: 1,
       pagesize: 15
@@ -83,6 +164,8 @@ export default {
   },
   mounted() {
     this.getlist();
+    this.getroutelist();
+    this.getuserlist();
   },
   methods: {
     getlist() {
@@ -94,6 +177,18 @@ export default {
         this.recordcount = res.result.total;
       });
     },
+    getroutelist() {
+      BaseFun.routelist().then(res => {
+        this.routelist = res.result;
+      });
+    },
+    getuserlist() {
+      UserFun.userlist({
+        pagesize: 65535
+      }).then(res => {
+        this.userlist = res.result.data;
+      });
+    },
     queryhandle(data) {
       console.log(data);
       this.searchdata = data;
@@ -101,11 +196,38 @@ export default {
     add_role() {
       this.dialogvisiable = true;
     },
-    submitdata() {},
-    edit_role() {},
-    role_user() {},
-    role_route() {},
-    handleSelectionChange() {},
+    submitdata() {
+      this.$refs.formrole.validate(v => {
+        console.log(v);
+        if (v) {
+          RoleFun.saverole({
+            name: this.formrole.name,
+            note: this.formrole.note,
+            userids: this.formrole.users,
+            routeids: this.formrole.routes,
+            status: this.formrole.status
+          }).then(res => {
+            this.$message.info(res.msg);
+            if (res.code === 1) {
+              this.getlist();
+              this.$refs["formrole"].resetFields();
+            }
+          });
+        } else {
+          return false;
+        }
+      });
+    },
+    edit_role(row) {
+      this.formrole = row;
+      this.dialogtitle = "编辑";
+      this.dialogvisiable = true;
+    },
+    role_user(row) {},
+    role_route(row) {},
+    handleSelectionChange(val) {
+      this.selectedrows = val;
+    },
     handleSizeChange(value) {
       this.pagesize = value;
     },

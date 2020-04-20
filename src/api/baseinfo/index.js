@@ -14,5 +14,11 @@ export default {
             method: 'get',
             params: data
         });
+    },
+    routelist: function () {
+        return request({
+            url: '/baseinfo/routes',
+            method: 'get'
+        })
     }
 }

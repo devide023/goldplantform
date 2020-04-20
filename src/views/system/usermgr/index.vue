@@ -96,9 +96,9 @@
         <el-form-item label="邮箱地址">
           <el-input type="email" v-model="userform.email"></el-input>
         </el-form-item>
-        <el-form-item label="联系地址">
+        <el-form-item label="联系地址" prop="provinces">
           <el-cascader
-            v-model="provinces"
+            v-model="userform.provinces"
             :props="city_props"
             :show-all-levels="true"
             @change="choosed_province"
@@ -122,7 +122,7 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="所属组织">
+        <el-form-item label="所属组织" prop="organizeids">
           <el-cascader
             v-model="orgids"
             :props="props"
@@ -163,7 +163,6 @@ export default {
       upload_headimg_path: UserFun.head_image_path,
       headerUrl: "",
       list: [],
-      provinces: [],
       orgids: [],
       searchdata: {},
       userform: {
@@ -181,6 +180,7 @@ export default {
         province: 0,
         city: 0,
         district: 0,
+        provinces: [],
         organizeids: []
       },
 
@@ -239,7 +239,7 @@ export default {
           { required: true, message: "请输入用户名", trigger: "blur" }
         ],
         password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-        userprovince: [
+        provinces: [
           {
             type: "array",
             required: true,
@@ -247,7 +247,7 @@ export default {
             trigger: ["blur", "change"]
           }
         ],
-        userorg: [
+        organizeids: [
           {
             type: "array",
             required: true,

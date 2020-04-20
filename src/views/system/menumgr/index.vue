@@ -4,6 +4,8 @@ import { NULL } from 'node-sass';
   <div>
     <query-bar @query="handlequery">
       <el-button type="success" @click="add_menu" size="small" icon="el-icon-plus">新增根菜单</el-button>
+      <el-button type="danger" size="small" @click="disable_item">禁用</el-button>
+      <el-button type="primary" size="small" @click="enable_item">启用</el-button>
       <el-button
         type="warning"
         @click="goback"
@@ -12,7 +14,8 @@ import { NULL } from 'node-sass';
         :disabled="menuback.length==0"
       >返回</el-button>
     </query-bar>
-    <el-table :data="list">
+    <el-table :data="list" @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" show-overflow-tooltip></el-table-column>
       <el-table-column label="状态">
         <template slot-scope="scope">{{scope.row.status|statusname}}</template>
       </el-table-column>
@@ -42,6 +45,7 @@ import { NULL } from 'node-sass';
                 @click.native="add_submenu(scope.row)"
               >子菜单</el-dropdown-item>
               <el-dropdown-item @click.native="edit_menu(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item @click.native="del_menu(scope.row)">删除</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -56,10 +60,10 @@ import { NULL } from 'node-sass';
         label-width="80px"
         label-position="right"
       >
-        <el-form-item v-if="hidefield" label="菜单名称" prop="name">
+        <el-form-item v-if="!show03" label="菜单名称" prop="name">
           <el-input v-model="form_menu.name" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="showfield" label="功能名称">
+        <el-form-item v-if="show03 && !editflag" label="功能名称">
           <el-select
             v-model="form_menu.funcodes"
             placeholder="请选择功能编码"
@@ -91,13 +95,13 @@ import { NULL } from 'node-sass';
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="hidefield" label="菜单路由" prop="path">
+        <el-form-item v-if="show0102" label="菜单路由" prop="path">
           <el-input v-model="form_menu.path" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="hidefield" label="视图路径" prop="viewpath">
+        <el-form-item v-if="show0102" label="视图路径" prop="viewpath">
           <el-input v-model="form_menu.viewpath" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="hidefield" label="图标" prop="icon">
+        <el-form-item v-if="show0102" label="图标" prop="icon">
           <el-select v-model="form_menu.icon" filterable placeholder="请选择图标" style="width:100%;">
             <el-option v-for="icon in icon_list" :key="icon.id" :value="icon.name">
               <span style="float: left">{{ icon.name }}</span>
@@ -129,7 +133,9 @@ export default {
     return {
       dialogtitle: "新增菜单",
       dialogshow: false,
+      editflag: false,
       rowobj: {},
+      multipleSelection: [],
       menuback: [],
       searchdata: {
         status: "",
@@ -171,11 +177,14 @@ export default {
     };
   },
   computed: {
-    hidefield() {
-      return this.rowobj.menutype === "01";
+    // menutyp为01、02时显示的字段
+    show0102() {
+      return (
+        this.rowobj.menutype === "01" || Object.keys(this.rowobj).length === 0
+      );
     },
-    showfield() {
-      return ["02", "03"].indexOf(this.rowobj.menutype) >= 0;
+    show03() {
+      return ["02"].indexOf(this.rowobj.menutype) >= 0;
     }
   },
   mounted() {
@@ -214,6 +223,7 @@ export default {
     },
     handlequery(data) {},
     add_menu() {
+      this.editflag = false;
       this.rowobj = {};
       this.form_menu.pid = 0;
       this.menutypes = this.menutypes_bak;
@@ -221,6 +231,7 @@ export default {
       this.dialogshow = true;
     },
     add_submenu(row) {
+      this.editflag = false;
       this.rowobj = row;
       this.form_menu.pid = row.id;
       this.menutypes = this.menutypes_bak;
@@ -235,15 +246,26 @@ export default {
     submit_form_data() {
       this.$refs["form_menu"].validate(v => {
         if (v) {
-          MenuFun.savemenu(this.form_menu).then(res => {
-            this.$message.info(res.msg);
-            if (res.code === 1) {
-              this.dialogshow = false;
-              this.form_menu.funcodes = [];
-              this.$refs["form_menu"].resetFields();
-              this.getlist();
-            }
-          });
+          if (this.editflag) {
+            MenuFun.editmenu(this.form_menu).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.form_menu.funcodes = [];
+                this.getlist();
+              }
+            });
+          } else {
+            MenuFun.savemenu(this.form_menu).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.form_menu.funcodes = [];
+                this.$refs["form_menu"].resetFields();
+                this.getlist();
+              }
+            });
+          }
         } else {
           return false;
         }
@@ -259,23 +281,75 @@ export default {
       this.getlist();
     },
     dialog_openedhandle() {
-      let d = {};
-      if (Object.keys(this.rowobj).length > 0) {
-        d = { id: this.rowobj.id };
-      } else {
-        d = { pid: 0 };
+      if (!this.editflag) {
+        let d = {};
+        if (Object.keys(this.rowobj).length > 0) {
+          d = { id: this.rowobj.id };
+        } else {
+          d = { pid: 0 };
+        }
+        MenuFun.menucode(d).then(res => {
+          this.form_menu.menucode = res.result;
+        });
       }
-      MenuFun.menucode(d).then(res => {
-        this.form_menu.menucode = res.result;
-      });
       this.getfuncode_list();
       this.geticonlist();
+    },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    disable_item() {
+      if (this.multipleSelection.length > 0) {
+        let ids = [];
+        this.multipleSelection.forEach(function(i) {
+          ids.push(i.id);
+        });
+        MenuFun.disableitem({ ids: ids }).then(res => {
+          this.$message.success(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      } else {
+        this.$message.info("请选择项目");
+      }
+    },
+    enable_item() {
+      if (this.multipleSelection.length > 0) {
+        let ids = [];
+        this.multipleSelection.forEach(function(i) {
+          ids.push(i.id);
+        });
+        MenuFun.enableitem({ ids: ids }).then(res => {
+          this.$message.success(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      } else {
+        this.$message.info("请选择项目");
+      }
     },
     edit_menu(row) {
       this.rowobj = row;
       this.form_menu = row;
+      this.editflag = true;
       this.dialogtitle = "编辑菜单";
+
       this.dialogshow = true;
+    },
+    del_menu(row) {
+      this.rowobj = row;
+      this.$confirm("你确定要永久删除该项?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        MenuFun.removemenu({ id: row.id }).then(res => {
+          this.$message.info(res.msg);
+          this.getlist();
+        });
+      });
     }
   }
 };

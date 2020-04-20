@@ -7,5 +7,12 @@ export default {
             url: '/role/list',
             data: data
         });
+    },
+    saverole: function (data) {
+        return request({
+            method: 'post',
+            url: '/role/add',
+            data: data
+        });
     }
 }

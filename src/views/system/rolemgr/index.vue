@@ -1,4 +1,3 @@
-import { rules } from '../../../../.eslintrc';
 <template>
   <div>
     <query-bar @query="queryhandle">
@@ -23,6 +22,7 @@ import { rules } from '../../../../.eslintrc';
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="edit_role(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item @click.native="role_menu(scope.row)">菜单</el-dropdown-item>
               <el-dropdown-item @click.native="role_user(scope.row)">用户</el-dropdown-item>
               <el-dropdown-item @click.native="role_route(scope.row)">路由</el-dropdown-item>
             </el-dropdown-menu>
@@ -53,6 +53,9 @@ import { rules } from '../../../../.eslintrc';
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="formrole.name" placeholder="请输入角色名称"></el-input>
         </el-form-item>
+        <el-form-item label="关联菜单">
+          <el-cascader :props="menu_props" v-model="formrole.menus" :show-all-levels="false"></el-cascader>
+        </el-form-item>
         <el-form-item label="关联用户" prop="users">
           <el-select
             v-model="formrole.users"
@@ -74,7 +77,7 @@ import { rules } from '../../../../.eslintrc';
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="关联路由" required prop="routes">
+        <el-form-item label="关联路由" prop="routes">
           <el-select
             v-model="formrole.routes"
             :filterable="true"
@@ -118,6 +121,7 @@ import QueryBar from "@/components/QueryBar/querybar";
 import RoleFun from "@/api/rolemgr/index";
 import BaseFun from "@/api/baseinfo/index";
 import UserFun from "@/api/usermgr/index";
+import MenuFun from "@/api/menumgr/index";
 export default {
   components: {
     "query-bar": QueryBar
@@ -133,10 +137,34 @@ export default {
       dialogvisiable: false,
       formrole: {
         status: 1,
+        menus: [],
         routes: [],
         users: [],
         name: "",
         note: ""
+      },
+      menu_props: {
+        lazy: true,
+        multiple: true,
+        lazyLoad(node, resolve) {
+          let pid = 0;
+          if (node.level !== 0) {
+            pid = node.value;
+          }
+          MenuFun.list({ pid: pid, pagesize: 65535 }).then(res => {
+            let nodes = res.result.data.filter(function(i) {
+              return ["01", "02"].indexOf(i.menutype) >= 0;
+            });
+            let d = nodes.map(function(i) {
+              let t = { label: i.name, value: i.id };
+              if (i.menutype === "02") {
+                t.leaf = true;
+              }
+              return t;
+            });
+            resolve(d);
+          });
+        }
       },
       rules: {
         name: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
@@ -223,6 +251,7 @@ export default {
       this.dialogtitle = "编辑";
       this.dialogvisiable = true;
     },
+    role_menu(row) {},
     role_user(row) {},
     role_route(row) {},
     handleSelectionChange(val) {

@@ -8,6 +8,20 @@ export default {
             params: data
         });
     },
+    addfuncode: function (data) {
+        return request({
+            method: 'post',
+            url: '/baseinfo/addfuncode',
+            data: data
+        })
+    },
+    delfuncode: function (data) {
+        return request({
+            method: 'get',
+            url: '/baseinfo/delfuncode',
+            params: data
+        });
+    },
     funcodelist: function (data) {
         return request({
             url: '/baseinfo/funcodes',

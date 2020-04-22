@@ -41,7 +41,13 @@
       background
       style="text-align:right;"
     ></el-pagination>
-    <el-dialog :title="dialogtitle" :visible.sync="dialogvisiable" top="10px" :rules="rules">
+    <el-dialog
+      :title="dialogtitle"
+      :visible.sync="dialogvisiable"
+      top="10px"
+      :rules="rules"
+      @opened="dialog_openhandle"
+    >
       <el-form
         :model="formrole"
         ref="formrole"
@@ -53,8 +59,8 @@
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="formrole.name" placeholder="请输入角色名称"></el-input>
         </el-form-item>
-        <el-form-item label="关联菜单">
-          <el-cascader :props="menu_props" v-model="formrole.menus" :show-all-levels="false"></el-cascader>
+        <el-form-item label="关联菜单" prop="menus">
+          <el-cascader :props="menu_props" v-model="formrole.menus" style="width:100%;"></el-cascader>
         </el-form-item>
         <el-form-item label="关联用户" prop="users">
           <el-select
@@ -122,6 +128,7 @@ import RoleFun from "@/api/rolemgr/index";
 import BaseFun from "@/api/baseinfo/index";
 import UserFun from "@/api/usermgr/index";
 import MenuFun from "@/api/menumgr/index";
+import ToolFun from "@/api/utils/tool";
 export default {
   components: {
     "query-bar": QueryBar
@@ -129,11 +136,13 @@ export default {
   data() {
     return {
       dialogtitle: "新增角色",
+      editflag: false,
       searchdata: {},
       routelist: [],
       userlist: [],
       list: [],
       selectedrows: [],
+      rowobj: {},
       dialogvisiable: false,
       formrole: {
         status: 1,
@@ -152,12 +161,10 @@ export default {
             pid = node.value;
           }
           MenuFun.list({ pid: pid, pagesize: 65535 }).then(res => {
-            let nodes = res.result.data.filter(function(i) {
-              return ["01", "02"].indexOf(i.menutype) >= 0;
-            });
+            let nodes = res.result.data;
             let d = nodes.map(function(i) {
               let t = { label: i.name, value: i.id };
-              if (i.menutype === "02") {
+              if (i.menutype === "03") {
                 t.leaf = true;
               }
               return t;
@@ -168,6 +175,14 @@ export default {
       },
       rules: {
         name: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
+        menus: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择角色关联的菜单",
+            trigger: "change"
+          }
+        ],
         users: [
           {
             type: "array",
@@ -223,24 +238,46 @@ export default {
     },
     add_role() {
       this.dialogvisiable = true;
+      this.editflag = false;
     },
     submitdata() {
       this.$refs.formrole.validate(v => {
         console.log(v);
         if (v) {
-          RoleFun.saverole({
-            name: this.formrole.name,
-            note: this.formrole.note,
-            userids: this.formrole.users,
-            routeids: this.formrole.routes,
-            status: this.formrole.status
-          }).then(res => {
-            this.$message.info(res.msg);
-            if (res.code === 1) {
-              this.getlist();
-              this.$refs["formrole"].resetFields();
-            }
-          });
+          if (this.formrole.id > 0) {
+            RoleFun.updaterole({
+              id: this.formrole.id,
+              name: this.formrole.name,
+              note: this.formrole.note,
+              menuids: this.formrole.menus,
+              userids: this.formrole.users,
+              routeids: this.formrole.routes,
+              status: this.formrole.status
+            }).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogvisiable = false;
+                this.getlist();
+                this.$refs["formrole"].resetFields();
+              }
+            });
+          } else {
+            RoleFun.saverole({
+              name: this.formrole.name,
+              note: this.formrole.note,
+              menuids: this.formrole.menus,
+              userids: this.formrole.users,
+              routeids: this.formrole.routes,
+              status: this.formrole.status
+            }).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogvisiable = false;
+                this.getlist();
+                this.$refs["formrole"].resetFields();
+              }
+            });
+          }
         } else {
           return false;
         }
@@ -248,8 +285,10 @@ export default {
     },
     edit_role(row) {
       this.formrole = row;
+      this.rowobj = row;
       this.dialogtitle = "编辑";
       this.dialogvisiable = true;
+      this.editflag = true;
     },
     role_menu(row) {},
     role_user(row) {},
@@ -262,6 +301,23 @@ export default {
     },
     handleCurrentChange(value) {
       this.pageindex = value;
+    },
+    dialog_openhandle() {
+      if (this.editflag) {
+        RoleFun.menupath({ id: this.rowobj.id }).then(res => {
+          this.formrole.menus = res.result;
+        });
+        RoleFun.rolerel({
+          id: this.rowobj.id
+        }).then(res => {
+          this.formrole.routes = res.result.routes.map(function(i) {
+            return i.id;
+          });
+          this.formrole.users = res.result.users.map(function(i) {
+            return i.id;
+          });
+        });
+      }
     }
   }
 };

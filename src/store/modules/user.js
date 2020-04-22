@@ -6,7 +6,8 @@ const getDefaultState = () => {
   return {
     token: getToken(),
     name: '',
-    avatar: ''
+    avatar: '',
+    menus: []
   }
 }
 
@@ -24,6 +25,9 @@ const mutations = {
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
+  },
+  SET_MENUS: (state, menus) => {
+    state.menus = menus;
   }
 }
 
@@ -34,8 +38,7 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
         setToken(response.token)
-        setMenus(JSON.stringify(response.menulist));
-        commit('SET_TOKEN', response.token)
+        commit('SET_TOKEN', response.token);
         resolve()
       }).catch(error => {
         reject(error)
@@ -50,6 +53,9 @@ const actions = {
         if (!response) {
           reject('Verification failed, please Login again.')
         }
+        let strmenus = JSON.stringify(response.menulist);
+        setMenus(strmenus);
+        commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
         resolve(response.user)

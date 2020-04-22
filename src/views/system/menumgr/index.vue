@@ -95,13 +95,13 @@ import { NULL } from 'node-sass';
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="show0102" label="菜单路由" prop="path">
+        <el-form-item v-if="show0102 && !editflag" label="菜单路由" prop="path">
           <el-input v-model="form_menu.path" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="show0102" label="视图路径" prop="viewpath">
+        <el-form-item v-if="show0102 && !editflag" label="视图路径" prop="viewpath">
           <el-input v-model="form_menu.viewpath" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="show0102" label="图标" prop="icon">
+        <el-form-item v-if="show0102 && !editflag" label="图标" prop="icon">
           <el-select v-model="form_menu.icon" filterable placeholder="请选择图标" style="width:100%;">
             <el-option v-for="icon in icon_list" :key="icon.id" :value="icon.name">
               <span style="float: left">{{ icon.name }}</span>
@@ -180,7 +180,8 @@ export default {
     // menutyp为01、02时显示的字段
     show0102() {
       return (
-        this.rowobj.menutype === "01" || Object.keys(this.rowobj).length === 0
+        ["01", "02"].indexOf(this.rowobj.menutype) >= 0 ||
+        Object.keys(this.rowobj).length === 0
       );
     },
     show03() {

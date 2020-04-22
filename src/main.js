@@ -9,8 +9,8 @@ import locale from 'element-ui/lib/locale/lang/zh-CN' // lang i18n
 import '@/styles/index.scss' // global css
 
 import App from './App'
-import store from './store'
-import router from './router'
+import store from '@/store/index'
+import router from '@/router/index'
 
 import '@/icons' // icon
 import '@/permission' // permission control
@@ -62,9 +62,10 @@ Vue.directive('has', {
     }
   }
 });
-new Vue({
+var vue = new Vue({
   el: '#app',
   router,
   store,
   render: h => h(App)
-})
+});
+export default vue

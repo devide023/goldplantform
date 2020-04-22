@@ -128,7 +128,6 @@ import RoleFun from "@/api/rolemgr/index";
 import BaseFun from "@/api/baseinfo/index";
 import UserFun from "@/api/usermgr/index";
 import MenuFun from "@/api/menumgr/index";
-import ToolFun from "@/api/utils/tool";
 export default {
   components: {
     "query-bar": QueryBar

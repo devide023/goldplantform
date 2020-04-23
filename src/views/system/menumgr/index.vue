@@ -1,23 +1,25 @@
-import { template } from 'babel-core';
-import { NULL } from 'node-sass';
 <template>
   <div>
     <query-bar @query="handlequery">
-      <el-button type="success" @click="add_menu" size="small" icon="el-icon-plus">新增根菜单</el-button>
-      <el-button type="danger" size="small" @click="disable_item">禁用</el-button>
-      <el-button type="primary" size="small" @click="enable_item">启用</el-button>
-      <el-button
-        type="warning"
-        @click="goback"
-        size="small"
-        icon="el-icon-arrow-up"
-        :disabled="menuback.length==0"
-      >返回</el-button>
+      <template #query_btn>
+        <el-button type="success" @click="add_menu" size="small" icon="el-icon-plus">根菜单</el-button>
+        <el-button type="danger" size="small" @click="disable_item">禁用</el-button>
+        <el-button type="primary" size="small" @click="enable_item">启用</el-button>
+        <el-button
+          type="warning"
+          @click="goback"
+          size="small"
+          icon="el-icon-arrow-up"
+          :disabled="menuback.length==0"
+        >返回</el-button>
+      </template>
     </query-bar>
     <el-table :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" show-overflow-tooltip></el-table-column>
       <el-table-column label="状态">
-        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status===1?'success':'danger'">{{scope.row.status|statusname}}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column label="名称">
         <template slot-scope="scope">
@@ -41,11 +43,26 @@ import { NULL } from 'node-sass';
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
-                v-if="scope.row.menutype!=='03'"
+                v-if="scope.row.menutype==='01'"
                 @click.native="add_submenu(scope.row)"
               >子菜单</el-dropdown-item>
-              <el-dropdown-item @click.native="edit_menu(scope.row)">编辑</el-dropdown-item>
-              <el-dropdown-item @click.native="del_menu(scope.row)">删除</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.menutype==='02'"
+                @click.native="add_pagefun(scope.row)"
+              >功能菜单</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.menutype ==='01'"
+                @click.native="edit_menu(scope.row)"
+              >编辑</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.menutype ==='02'"
+                @click.native="edit_pagefun(scope.row)"
+              >编辑</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.menutype ==='03'"
+                @click.native="del_menu(scope.row)"
+              >删除</el-dropdown-item>
+              <el-dropdown-item @click.native="menu_role(scope.row)">关联角色</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -60,10 +77,58 @@ import { NULL } from 'node-sass';
         label-width="80px"
         label-position="right"
       >
-        <el-form-item v-if="!show03" label="菜单名称" prop="name">
+        <el-form-item label="菜单名称" prop="name">
           <el-input v-model="form_menu.name" placeholder="请输入菜单名称"></el-input>
         </el-form-item>
-        <el-form-item v-if="show03 && !editflag" label="功能名称">
+        <el-form-item label="菜单编码">
+          <el-input v-model="form_menu.menucode" readonly placeholder="请输入菜单编码"></el-input>
+        </el-form-item>
+        <el-form-item label="菜单类型" prop="menutype">
+          <el-select v-model="form_menu.menutype" placeholder="请选择" style="width:100%;">
+            <el-option
+              v-for="item in menutypes"
+              :key="item.id"
+              :label="item.name"
+              :value="item.code"
+            >
+              <span style="float: left">{{ item.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px">{{ item.code }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="菜单路由" prop="path">
+          <el-input v-model="form_menu.path" placeholder="请输入菜单名称"></el-input>
+        </el-form-item>
+        <el-form-item label="视图路径" prop="viewpath">
+          <el-input v-model="form_menu.viewpath" placeholder="请输入菜单名称"></el-input>
+        </el-form-item>
+        <el-form-item label="图标" prop="icon">
+          <el-select v-model="form_menu.icon" filterable placeholder="请选择图标" style="width:100%;">
+            <el-option v-for="icon in icon_list" :key="icon.id" :value="icon.name">
+              <span style="float: left">{{ icon.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px">
+                <svg-icon :icon-class="icon.name" />
+              </span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogshow = false">取 消</el-button>
+        <el-button type="primary" @click="submit_form_data">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!--功能菜单dialog-->
+    <el-dialog :title="dialog_fun" :visible.sync="dialog_funshow" @opened="dialog_funopen_handle">
+      <el-form
+        :model="form_menu"
+        ref="form_menu"
+        :rules="rules"
+        size="small"
+        label-width="80px"
+        label-position="right"
+      >
+        <el-form-item label="功能简码" prop="funcodes">
           <el-select
             v-model="form_menu.funcodes"
             placeholder="请选择功能编码"
@@ -72,8 +137,8 @@ import { NULL } from 'node-sass';
             style="width:100%;"
           >
             <el-option
-              v-for="item in funcode_list"
-              :key="item.id"
+              v-for="(item,index) in funcode_list"
+              :key="index"
               :label="item.name+ '('+item.code+')' "
               :value="item.code"
             ></el-option>
@@ -95,25 +160,9 @@ import { NULL } from 'node-sass';
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="show0102 && !editflag" label="菜单路由" prop="path">
-          <el-input v-model="form_menu.path" placeholder="请输入菜单名称"></el-input>
-        </el-form-item>
-        <el-form-item v-if="show0102 && !editflag" label="视图路径" prop="viewpath">
-          <el-input v-model="form_menu.viewpath" placeholder="请输入菜单名称"></el-input>
-        </el-form-item>
-        <el-form-item v-if="show0102 && !editflag" label="图标" prop="icon">
-          <el-select v-model="form_menu.icon" filterable placeholder="请选择图标" style="width:100%;">
-            <el-option v-for="icon in icon_list" :key="icon.id" :value="icon.name">
-              <span style="float: left">{{ icon.name }}</span>
-              <span style="float: right; color: #8492a6; font-size: 13px">
-                <svg-icon :icon-class="icon.name" />
-              </span>
-            </el-option>
-          </el-select>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogshow = false">取 消</el-button>
+        <el-button @click="dialog_funshow = false">取 消</el-button>
         <el-button type="primary" @click="submit_form_data">确 定</el-button>
       </div>
     </el-dialog>
@@ -131,8 +180,10 @@ export default {
   },
   data() {
     return {
-      dialogtitle: "新增菜单",
+      dialogtitle: "新增根菜单",
+      dialog_fun: "新增页面功能",
       dialogshow: false,
+      dialog_funshow: false,
       editflag: false,
       rowobj: {},
       multipleSelection: [],
@@ -165,6 +216,14 @@ export default {
         menutype: [
           { required: true, message: "请选择菜单类型", trigger: "blur" }
         ],
+        funcodes: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择功能简码",
+            trigger: "change"
+          }
+        ],
         icon: [{ required: true, message: "请选择菜单图标", trigger: "blur" }],
         path: [{ required: true, message: "请输入路由", trigger: "blur" }],
         viewpath: [
@@ -175,18 +234,6 @@ export default {
       pageindex: 1,
       pagesize: 15
     };
-  },
-  computed: {
-    // menutyp为01、02时显示的字段
-    show0102() {
-      return (
-        ["01", "02"].indexOf(this.rowobj.menutype) >= 0 ||
-        Object.keys(this.rowobj).length === 0
-      );
-    },
-    show03() {
-      return ["02"].indexOf(this.rowobj.menutype) >= 0;
-    }
   },
   mounted() {
     this.getmenutypelist();
@@ -252,6 +299,7 @@ export default {
               this.$message.info(res.msg);
               if (res.code === 1) {
                 this.dialogshow = false;
+                this.dialog_funshow = false;
                 this.form_menu.funcodes = [];
                 this.getlist();
               }
@@ -261,6 +309,7 @@ export default {
               this.$message.info(res.msg);
               if (res.code === 1) {
                 this.dialogshow = false;
+                this.dialog_funshow = false;
                 this.form_menu.funcodes = [];
                 this.$refs["form_menu"].resetFields();
                 this.getlist();
@@ -293,8 +342,29 @@ export default {
           this.form_menu.menucode = res.result;
         });
       }
-      this.getfuncode_list();
       this.geticonlist();
+    },
+    dialog_funopen_handle() {
+      this.getfuncode_list();
+      if (!this.editflag) {
+        let d = {};
+        if (Object.keys(this.rowobj).length > 0) {
+          d = { id: this.rowobj.id };
+        } else {
+          d = { pid: 0 };
+        }
+        MenuFun.menucode(d).then(res => {
+          this.form_menu.menucode = res.result;
+        });
+      } else {
+        MenuFun.pagefuncodes({
+          id: this.rowobj.id
+        }).then(res => {
+          this.form_menu.funcodes = res.result.map(function(i) {
+            return i.code;
+          });
+        });
+      }
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
@@ -351,7 +421,25 @@ export default {
           this.getlist();
         });
       });
-    }
+    },
+    add_pagefun(row) {
+      this.rowobj = row;
+      this.form_menu.pid = row.id;
+      this.form_menu.menutype = "03";
+      this.editflag = false;
+      this.dialog_funshow = true;
+    },
+    edit_pagefun(row) {
+      this.rowobj = row;
+      this.form_menu.menucode = row.menucode;
+      this.form_menu.pid = row.pid;
+      this.form_menu.menutype = row.menutype;
+      this.form_menu.status = 1;
+      this.dialog_fun = "编辑页面功能";
+      this.editflag = true;
+      this.dialog_funshow = true;
+    },
+    menu_role(row) {}
   }
 };
 </script>

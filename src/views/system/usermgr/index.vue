@@ -1,7 +1,7 @@
 <template>
   <div>
     <query-bar @query="querydata">
-      <template>
+      <template #query_btn>
         <el-button
           size="small"
           type="success"
@@ -9,14 +9,17 @@
           v-has="{fun:'add'}"
           @click="AddUser()"
         >新增</el-button>
-        <el-button size="small" type="warning">禁用</el-button>
+        <el-button size="small" type="danger" @click="disable_user">禁用</el-button>
+        <el-button size="small" type="warning" @click="enable_user">启用</el-button>
       </template>
     </query-bar>
     <el-table :data="list" @selection-change="handleSelectionChange">
       >
       <el-table-column type="selection" width="55" show-overflow-tooltip></el-table-column>
       <el-table-column label="状态" width="70">
-        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status===1?'success':'danger'">{{scope.row.status|statusname}}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column label="代号" prop="usercode" width="80"></el-table-column>
       <el-table-column label="姓名" prop="name" width="80"></el-table-column>
@@ -37,7 +40,7 @@
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item v-has="{fun:'edit'}" @click.native="useredit(scope.row)">编辑</el-dropdown-item>
-              <el-dropdown-item v-has="{fun:'userrole'}" @click.native="userrole(scope.row)">角色</el-dropdown-item>
+              <el-dropdown-item @click.native="userrole(scope.row)">关联角色</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -162,6 +165,7 @@ export default {
       },
       upload_headimg_path: UserFun.head_image_path,
       headerUrl: "",
+      selectedrows: [],
       list: [],
       orgids: [],
       searchdata: {},
@@ -323,7 +327,9 @@ export default {
         this.provinces = [user.province, user.city, user.district];
       }
     },
-    handleSelectionChange() {},
+    handleSelectionChange(rows) {
+      this.selectedrows = rows;
+    },
     handleCurrentChange(index) {
       this.pageindex = index;
       this.getlist();
@@ -343,6 +349,40 @@ export default {
         this.userform.city = value[1];
         this.userform.district = value[2];
       }
+    },
+    disable_user() {
+      this.$confirm("你确定要禁用所选项目?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          let ids = this.selectedrows.map(function(i) {
+            return i.id;
+          });
+          UserFun.disabel({
+            ids: ids
+          }).then(res => {
+            this.$message.info(res.msg);
+            if (res.code === 1) {
+              this.getlist();
+            }
+          });
+        })
+        .catch(() => {});
+    },
+    enable_user() {
+      let ids = this.selectedrows.map(function(i) {
+        return i.id;
+      });
+      UserFun.enabel({
+        ids: ids
+      }).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.getlist();
+        }
+      });
     },
     beforeAvatarUpload(file) {
       const isJPG = ["image/jpeg", "image/png"].indexOf(file.type);

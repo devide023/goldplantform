@@ -1,14 +1,16 @@
 <template>
   <div>
     <query-bar @query="queryhandle">
-      <slot>
+      <template #query_btn>
         <el-button type="success" @click="add_role" size="small" icon="el-icon-plus">新增</el-button>
-      </slot>
+      </template>
     </query-bar>
     <el-table :data="list" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" show-overflow-tooltip></el-table-column>
       <el-table-column label="状态" width="100px">
-        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status===1?'success':'danger'">{{scope.row.status|statusname}}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column label="名称" prop="name" width="200px"></el-table-column>
       <el-table-column label="备注" prop="note" width="300px"></el-table-column>
@@ -22,9 +24,9 @@
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="edit_role(scope.row)">编辑</el-dropdown-item>
-              <el-dropdown-item @click.native="role_menu(scope.row)">菜单</el-dropdown-item>
-              <el-dropdown-item @click.native="role_user(scope.row)">用户</el-dropdown-item>
-              <el-dropdown-item @click.native="role_route(scope.row)">路由</el-dropdown-item>
+              <el-dropdown-item @click.native="role_menu(scope.row)">关联菜单</el-dropdown-item>
+              <el-dropdown-item @click.native="role_user(scope.row)">关联用户</el-dropdown-item>
+              <el-dropdown-item @click.native="role_route(scope.row)">关联路由</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>

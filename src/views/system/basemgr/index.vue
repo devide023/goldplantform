@@ -19,7 +19,11 @@
         </div>
         <el-table :data="funcodelist">
           <el-table-column label="状态">
-            <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+            <template slot-scope="scope">
+              <el-tag
+                :type="scope.row.status===1?'success':'danger'"
+              >{{scope.row.status|statusname}}</el-tag>
+            </template>
           </el-table-column>
           <el-table-column label="简码" prop="code"></el-table-column>
           <el-table-column label="名称" prop="name"></el-table-column>
@@ -44,7 +48,7 @@
     </el-tabs>
 
     <el-dialog :title="dialog_funcode_title" :visible.sync="dialog_funcode_show">
-      <el-form :model="form_funcode" label-width="80px" label-position="right">
+      <el-form :model="form_funcode" size="small" label-width="80px" label-position="right">
         <el-form-item label="功能简码">
           <el-input v-model="form_funcode.code" placeholder="请输入功能简码"></el-input>
         </el-form-item>

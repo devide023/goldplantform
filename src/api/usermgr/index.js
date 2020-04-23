@@ -47,5 +47,19 @@ export default {
             method: 'get',
             params: { id: data }
         });
+    },
+    disabel: function (data) {
+        return request({
+            method: 'post',
+            url: '/user/disable',
+            data: data
+        });
+    },
+    enabel: function (data) {
+        return request({
+            method: 'post',
+            url: '/user/enable',
+            data: data
+        });
     }
 }

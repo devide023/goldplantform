@@ -4,6 +4,8 @@ Vue.use(Router)
 
 /* Layout */
 import Layout from '@/layout'
+import { getMenus } from '@/utils/auth';
+import { get_userroutes } from '@/router/userroute';
 //import { getMenus } from '@/utils/auth';
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -47,11 +49,15 @@ export const constantRoutes = [
     component: Layout
   }
 ]
-
+let routedata = JSON.parse(getMenus());
+let user_routes = [];
+if (routedata) {
+  user_routes = get_userroutes(routedata);
+}
 const createRouter = () => new Router({
   mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
+  routes: constantRoutes.concat(user_routes)
 })
 
 const router = createRouter()

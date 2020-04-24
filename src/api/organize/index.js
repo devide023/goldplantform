@@ -4,9 +4,6 @@ export default {
         return request({
             url: '/organize/add',
             method: 'post',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             data: data
         })
     },
@@ -35,6 +32,13 @@ export default {
         return request({
             url: '/organize/curentnodes',
             method: 'get',
+            params: data
+        });
+    },
+    all_tree_nodes: (data) => {
+        return request({
+            method: 'get',
+            url: '/organize/alltree',
             params: data
         });
     }

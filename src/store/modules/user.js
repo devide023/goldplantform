@@ -60,9 +60,6 @@ const actions = {
         commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
-        let routedata = get_userroutes(response.menulist)
-        route.addRoutes(routedata);
-        route.options.routes = routedata;
         resolve(response.user)
       }).catch(error => {
         reject(error)

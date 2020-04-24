@@ -40,5 +40,11 @@ export default {
             url: '/baseinfo/freshroute',
             method: 'get'
         })
+    },
+    orgtypelist: () => {
+        return request({
+            method: 'get',
+            url: '/baseinfo/orgtypes'
+        })
     }
 }

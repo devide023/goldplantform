@@ -4,31 +4,18 @@
       <el-input v-model="key" placeholder="输入关键字进行过滤" size="small" style="width:200px;"></el-input>
       <el-button type="primary" size="small" icon="el-icon-edit" @click="edit_organize_tree">编辑节点树</el-button>
       <el-button type="success" size="small" icon="el-icon-info" @click="edit_nodeinfo">编辑节点信息</el-button>
-      <el-upload
-        :action="uploadurl"
-        :show-file-list="false"
-        :multiple="false"
-        class="myupload"
-        :on-success="uploadsuccess"
-        :on-error="uploaderror"
-        :before-upload="beforeUpload"
-      >
-        <el-button size="small" type="primary">导入文件</el-button>
-      </el-upload>
     </div>
     <el-tree
-      :load="loadnode"
-      lazy
-      show-checkbox
+      :data="list"
       node_key="id"
       :expand-on-click-node="false"
       :filter-node-method="filterNode"
       ref="tree"
       highlight-current
     ></el-tree>
-    <el-dialog title="组织节点树" :visible.sync="dialogshow" top="10px">
+    <el-dialog title="组织节点树" :visible.sync="dialogshow" top="10px" @opened="dialog_opened_handle">
       <div class="mytree">
-        <el-tree :data="list" node-key="nodeid" default-expand-all :expand-on-click-node="false">
+        <el-tree :data="list" node-key="id" default-expand-all :expand-on-click-node="false">
           <span slot-scope="{ node, data }" class="custom-tree-node">
             <span v-if="data.isedit">
               <el-input
@@ -60,27 +47,27 @@
     </el-dialog>
     <el-dialog title="编辑节点信息" :visible.sync="formdialog" top="10px">
       <el-form :model="nodeform" label-width="80px" size="small" label-position="right">
-        <el-form-item label="名称">
-          <el-input v-model="nodeform.title" placeholder="名称"></el-input>
+        <el-form-item label="节点名称">
+          <el-input v-model="nodeform.name" placeholder="节点名称"></el-input>
         </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="nodeform.orgtype" placeholder="请选择">
+        <el-form-item label="节点类型">
+          <el-select v-model="nodeform.orgtype" placeholder="请选择节点">
             <el-option
               v-for="item in orgtype_options"
-              :key="item.id"
-              :label="item.title"
-              :value="item.id"
+              :key="item.code"
+              :label="item.name"
+              :value="item.code"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="编码">
-          <el-input v-model="nodeform.code" placeholder="编码"></el-input>
+        <el-form-item label="节点编码">
+          <el-input v-model="nodeform.orgcode" placeholder="节点编码"></el-input>
         </el-form-item>
         <el-form-item label="负责人">
           <el-input v-model="nodeform.leader" placeholder="负责人"></el-input>
         </el-form-item>
-        <el-form-item label="图标">
-          <el-input v-model="nodeform.logo" placeholder="图标"></el-input>
+        <el-form-item label="节点Logo">
+          <el-input v-model="nodeform.logo" placeholder="节点Logo"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -93,6 +80,7 @@
 
 <script>
 import OrgFun from "@/api/organize/index";
+import BaseFun from "@/api/baseinfo/index";
 export default {
   data() {
     return {
@@ -112,11 +100,11 @@ export default {
     }
   },
   mounted() {
-    this.gettree_data();
+    this.get_tree_all();
+    this.getorgtypes();
   },
   methods: {
     loadnode(node, resolve) {
-      console.log(node);
       let pid = 0;
       if (node.level > 0) {
         pid = node.data.id;
@@ -135,23 +123,14 @@ export default {
         resolve(nodes);
       });
     },
-    gettree_data() {
-      OrgFun.getorgtree({
-        pagesize: 65535
-      }).then(res => {
-        // const Fn = Function;
-        // this.nodeid = res.nodeid;
-        // this.list = new Fn("return " + res.data)();
-        // this.orgtree = new Fn("return " + res.data)();
-        this.orgtree = res.result.data.map(function(i) {
-          return {
-            id: i.id,
-            pid: i.pid,
-            label: i.name,
-            orgcode: i.orgcode,
-            orgtype: i.orgtype
-          };
-        });
+    get_tree_all() {
+      OrgFun.all_tree_nodes(0).then(res => {
+        this.list = res.result;
+      });
+    },
+    getorgtypes() {
+      BaseFun.orgtypelist().then(res => {
+        this.orgtype_options = res.result;
       });
     },
     append(data) {
@@ -205,9 +184,10 @@ export default {
     },
     edit_nodeinfo() {
       const node = this.$refs.tree.getCurrentNode();
+      console.log(node);
       if (node) {
-        OrgFun.getnodeinfo(node.nodeid).then(res => {
-          this.nodeform = res.node;
+        OrgFun.getnodeinfo({ id: node.id }).then(res => {
+          this.nodeform = res.result;
           this.formdialog = true;
         });
       }
@@ -218,40 +198,7 @@ export default {
         this.formdialog = false;
       });
     },
-    uploadsuccess(response, file, fileList) {
-      console.log(response);
-      console.log(file);
-      console.log(fileList);
-      this.$notify.success({ title: file.name, message: response.msg });
-    },
-    uploaderror(err, file, fileList) {
-      console.log(err);
-      console.log(file);
-      console.log(fileList);
-      this.$notify.error({ title: file.name, message: err.msg });
-    },
-    beforeUpload(file) {
-      console.log(file);
-      const isJPG =
-        file.type === "application/vnd.ms-excel" ||
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      const isLt4M = file.size / 1024 / 1024 < 4;
-
-      if (!isJPG) {
-        this.$notify.error({
-          title: file.name,
-          message: "上传文件只能是 xls或xlsx 格式!"
-        });
-      }
-      if (!isLt4M) {
-        this.$notify.error({
-          title: file.name,
-          message: "上传文件大小不能超过 4MB!"
-        });
-      }
-      return isJPG && isLt4M;
-    }
+    dialog_opened_handle() {}
   }
 };
 </script>

@@ -1,11 +1,5 @@
-import { getMenus } from '@/utils/auth';
-export function get_userroutes() {
+export function get_userroutes(menulist) {
   const routlist = [];
-  let ms = getMenus();
-  let menulist = [];
-  if (ms) {
-    menulist = JSON.parse(ms);
-  }
   const root = menulist.filter((item) => {
     return item.pid === 0;
   });

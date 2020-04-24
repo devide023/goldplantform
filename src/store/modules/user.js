@@ -1,6 +1,8 @@
 import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
+import { getToken, setToken, removeToken, removeMenus } from '@/utils/auth'
 import { resetRouter } from '@/router'
+import route from '@/router/index';
+import { get_userroutes } from '@/router/userroute';
 
 const getDefaultState = () => {
   return {
@@ -53,11 +55,14 @@ const actions = {
         if (!response) {
           reject('Verification failed, please Login again.')
         }
-        let strmenus = JSON.stringify(response.menulist);
-        setMenus(strmenus);
-        commit('SET_MENUS', strmenus);
+        //let strmenus = JSON.stringify(response.menulist);
+        // setMenus(strmenus);
+        // commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
+        let routedata = get_userroutes(response.menulist)
+        route.addRoutes(routedata);
+        route.options.routes = routedata;
         resolve(response.user)
       }).catch(error => {
         reject(error)

@@ -5,14 +5,28 @@
       <el-button type="primary" size="small" icon="el-icon-edit" @click="edit_organize_tree">编辑节点树</el-button>
       <el-button type="success" size="small" icon="el-icon-info" @click="edit_nodeinfo">编辑节点信息</el-button>
     </div>
-    <el-tree
-      :data="list"
-      node_key="id"
-      :expand-on-click-node="false"
-      :filter-node-method="filterNode"
-      ref="tree"
-      highlight-current
-    ></el-tree>
+    <el-row>
+      <el-col :span="6">
+        <el-tree
+          :data="list"
+          node_key="id"
+          :expand-on-click-node="false"
+          :filter-node-method="filterNode"
+          ref="tree"
+          highlight-current
+        ></el-tree>
+      </el-col>
+      <el-col :span="18">
+        <el-table :data="orguserlist">
+          <el-table-column label="姓名"></el-table-column>
+          <el-table-column label="代号"></el-table-column>
+          <el-table-column label="性别"></el-table-column>
+          <el-table-column label="电话"></el-table-column>
+          <el-table-column label="身份证"></el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+
     <el-dialog title="组织节点树" :visible.sync="dialogshow" top="10px" @opened="dialog_opened_handle">
       <div class="mytree">
         <el-tree :data="list" node-key="id" default-expand-all :expand-on-click-node="false">
@@ -91,7 +105,8 @@ export default {
       dialogshow: false,
       formdialog: false,
       nodeform: {},
-      orgtype_options: []
+      orgtype_options: [],
+      orguserlist: []
     };
   },
   watch: {
@@ -137,7 +152,7 @@ export default {
       const newChild = {
         nodeid: this.nodeid++,
         isedit: false,
-        parentid: data.nodeid,
+        parentid: data.id,
         label: "新节点"
       };
       if (!data.children) {
@@ -169,7 +184,7 @@ export default {
     },
     save_organize_tree() {
       if (this.list) {
-        OrgFun.saveorgtree(this.list).then(res => {
+        OrgFun.saveorgtree({ orgtree: this.list }).then(res => {
           this.gettree_data();
           this.dialogshow = false;
         });
@@ -184,7 +199,6 @@ export default {
     },
     edit_nodeinfo() {
       const node = this.$refs.tree.getCurrentNode();
-      console.log(node);
       if (node) {
         OrgFun.getnodeinfo({ id: node.id }).then(res => {
           this.nodeform = res.result;

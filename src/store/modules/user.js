@@ -1,9 +1,8 @@
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
-import { resetRouter } from '@/router'
-import route from '@/router/index';
+import router from '@/router/index';
+import { resetRouter, constantRoutes } from '@/router';//constantRoutes
 import { get_userroutes } from '@/router/userroute';
-
 const getDefaultState = () => {
   return {
     token: getToken(),
@@ -47,7 +46,6 @@ const actions = {
       })
     })
   },
-
   // get user info
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
@@ -60,13 +58,16 @@ const actions = {
         commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
+        let routelist = get_userroutes(response.menulist)
+        let allroutes = constantRoutes.concat(routelist)
+        router.addRoutes(allroutes);
+        router.options.routes = allroutes;
         resolve(response.user)
       }).catch(error => {
         reject(error)
       })
     })
   },
-
   // user logout
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {

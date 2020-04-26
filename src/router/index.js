@@ -6,7 +6,6 @@ Vue.use(Router)
 import Layout from '@/layout'
 import { getMenus } from '@/utils/auth';
 import { get_userroutes } from '@/router/userroute';
-//import { getMenus } from '@/utils/auth';
 /**
  * Note: sub-menu only appear when route children.length >= 1
  * Detail see: https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -57,11 +56,9 @@ if (routedata) {
 const createRouter = () => new Router({
   mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
+  routes: constantRoutes.concat(user_routes)
 });
 const router = createRouter();
-router.addRoutes(user_routes);
-router.options.routes = user_routes;
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
   const newRouter = createRouter()

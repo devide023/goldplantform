@@ -2,7 +2,7 @@ import request from '@/utils/request.js';
 export default {
     saveorgtree: (data) => {
         return request({
-            url: '/organize/add',
+            url: '/organize/saveallorg',
             method: 'post',
             data: data
         })

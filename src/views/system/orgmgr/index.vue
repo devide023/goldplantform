@@ -213,12 +213,12 @@ export default {
       });
     },
     overedit(node, data) {
-      console.log(data);
       node.data.isedit = false;
       OrgFun.editednode({
         data
       })
         .then(res => {
+          node.data.label = data.label;
           if (res.code === 0) {
             this.$message.info(res.msg);
           }
@@ -230,7 +230,7 @@ export default {
         OrgFun.saveorgtree({ orgtree: this.list }).then(res => {
           this.$message.info(res.msg);
           if (res.code === 1) {
-            this.gettree_data();
+            this.get_tree_all();
             this.dialogshow = false;
           }
         });
@@ -242,7 +242,7 @@ export default {
     },
     update_nodeinfo() {
       OrgFun.updatenodeinfo(this.nodeform).then(res => {
-        this.gettree_data();
+        this.get_tree_all();
         this.formdialog = false;
       });
     },

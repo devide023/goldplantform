@@ -149,31 +149,61 @@ export default {
       });
     },
     append(data) {
-      const newChild = {
-        nodeid: this.nodeid++,
-        isedit: false,
-        parentid: data.id,
-        label: "新节点"
-      };
-      if (!data.children) {
-        this.$set(data, "children", []);
-      }
-      data.children.push(newChild);
+      OrgFun.createnode({
+        id: data.id
+      }).then(res => {
+        const newChild = {
+          id: res.result.id,
+          isedit: false,
+          parentid: data.id,
+          label: res.result.name,
+          orgcode: res.result.orgcode,
+          orgtype: res.result.orgtype
+        };
+        if (!data.children) {
+          this.$set(data, "children", []);
+        }
+        data.children.push(newChild);
+      });
     },
     remove(node, data) {
-      const parent = node.parent;
-      const children = parent.data.children || parent.data;
-      const index = children.findIndex(d => d.nodeid === data.nodeid);
-      children.splice(index, 1);
+      this.$confirm("你确定删除该节点?", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(() => {
+          OrgFun.removenode({
+            id: data.id
+          })
+            .then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                const parent = node.parent;
+                const children = parent.data.children || parent.data;
+                const index = children.findIndex(d => d.id === data.id);
+                children.splice(index, 1);
+              }
+            })
+            .catch(() => {});
+        })
+        .catch(() => {
+          this.$message.info("操作已取消");
+        });
     },
     add_rootnode() {
-      this.list.push({
-        label: "根节点",
-        nodeid: this.nodeid,
-        parentid: 0,
-        isedit: false
+      OrgFun.createnode({
+        id: 0
+      }).then(res => {
+        this.list.push({
+          label: res.result.name,
+          id: res.result.id,
+          parentid: res.result.pid,
+          isedit: false,
+          orgtype: res.result.orgtype,
+          orgcode: res.result.orgcode
+        });
       });
-      this.nodeid++;
     },
     edit(node, data) {
       node.data.isedit = true;

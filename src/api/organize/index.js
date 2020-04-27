@@ -41,5 +41,19 @@ export default {
             url: '/organize/alltree',
             params: data
         });
+    },
+    createnode: (data) => {
+        return request({
+            method: 'get',
+            url: '/organize/create_node',
+            params: data
+        });
+    },
+    removenode: (data) => {
+        return request({
+            method: 'get',
+            url: '/organize/remove_node',
+            params: data
+        });
     }
 }

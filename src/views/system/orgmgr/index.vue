@@ -2,8 +2,7 @@
   <div>
     <div class="operate_bar">
       <el-input v-model="key" placeholder="输入关键字进行过滤" size="small" style="width:200px;"></el-input>
-      <el-button type="primary" size="small" icon="el-icon-edit" @click="edit_organize_tree">编辑节点树</el-button>
-      <el-button type="success" size="small" icon="el-icon-info" @click="edit_nodeinfo">编辑节点信息</el-button>
+      <el-button type="primary" size="small" icon="el-icon-edit" @click="dialogshow=true;">编辑节点树</el-button>
     </div>
     <el-row>
       <el-col :span="6">
@@ -206,35 +205,40 @@ export default {
       });
     },
     edit(node, data) {
-      node.data.isedit = true;
-      this.$nextTick(() => {});
+      //node.data.isedit = true;
+      //this.$nextTick(() => {});
+      OrgFun.getnodeinfo({ id: data.id }).then(res => {
+        this.nodeform = res.result;
+        this.formdialog = true;
+      });
     },
     overedit(node, data) {
+      console.log(data);
       node.data.isedit = false;
+      OrgFun.editednode({
+        data
+      })
+        .then(res => {
+          if (res.code === 0) {
+            this.$message.info(res.msg);
+          }
+        })
+        .catch(() => {});
     },
     save_organize_tree() {
       if (this.list) {
         OrgFun.saveorgtree({ orgtree: this.list }).then(res => {
-          this.gettree_data();
-          this.dialogshow = false;
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.gettree_data();
+            this.dialogshow = false;
+          }
         });
       }
-    },
-    edit_organize_tree() {
-      this.dialogshow = true;
     },
     filterNode(value, data) {
       if (!value) return true;
       return data.label.indexOf(value) !== -1;
-    },
-    edit_nodeinfo() {
-      const node = this.$refs.tree.getCurrentNode();
-      if (node) {
-        OrgFun.getnodeinfo({ id: node.id }).then(res => {
-          this.nodeform = res.result;
-          this.formdialog = true;
-        });
-      }
     },
     update_nodeinfo() {
       OrgFun.updatenodeinfo(this.nodeform).then(res => {

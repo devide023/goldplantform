@@ -55,5 +55,12 @@ export default {
             url: '/organize/remove_node',
             params: data
         });
+    },
+    editednode: (data) => {
+        return request({
+            method: 'post',
+            url: '/organize/edited_node',
+            data: data
+        });
     }
 }

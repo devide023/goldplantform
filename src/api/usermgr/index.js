@@ -9,6 +9,13 @@ export default {
             data: data
         });
     },
+    find: (data) => {
+        return request({
+            url: '/user/find',
+            method: 'get',
+            params: data
+        });
+    },
     saverole: function (data) {
         return request({
             url: '/user/userrole',
@@ -16,7 +23,13 @@ export default {
             data: data
         });
     },
-
+    saveorgnodes: (data) => {
+        return request({
+            url: '/user/userorg',
+            method: 'post',
+            data: data
+        });
+    },
     add: function (data) {
         return request({
             url: '/user/add',
@@ -40,7 +53,20 @@ export default {
             data: data
         });
     },
-
+    getuserroles: (data) => {
+        return request({
+            method: 'get',
+            url: '/user/get_userroles',
+            params: data
+        });
+    },
+    getuserorgs: (data) => {
+        return request({
+            url: '/user/get_userorgs',
+            method: 'get',
+            params: data
+        });
+    },
     getmenus: function (data) {
         return request({
             url: '/user/menus',

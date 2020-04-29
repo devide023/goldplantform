@@ -1,3 +1,5 @@
+import { TRUE } from 'node-sass';
+import organize from '../../../api/organize';
 <template>
   <div>
     <query-bar @query="querydata">
@@ -41,6 +43,7 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item v-has="{fun:'edit'}" @click.native="useredit(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="userrole(scope.row)">关联角色</el-dropdown-item>
+              <el-dropdown-item @click.native="userorg(scope.row)">关联组织节点</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -58,7 +61,12 @@
       style="text-align:right;"
     ></el-pagination>
 
-    <el-dialog :title="formtitle" :visible.sync="dialogVisible" top="10px">
+    <el-dialog
+      :title="formtitle"
+      :visible.sync="dialogVisible"
+      top="10px"
+      @closed="dialog_user_closed"
+    >
       <el-form
         :model="userform"
         ref="userform"
@@ -79,7 +87,7 @@
             <el-radio :label="0">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="登录密码" prop="password">
+        <el-form-item v-if="!editflag" label="登录密码" prop="password">
           <el-input type="password" v-model="userform.password"></el-input>
         </el-form-item>
         <el-form-item label="出生日期">
@@ -125,20 +133,33 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="所属组织" prop="organizeids">
-          <el-cascader
-            v-model="orgids"
-            :props="props"
-            :show-all-levels="false"
-            @change="selected_org"
-            placeholder="请选择组织架构"
-            ref="ddl_orgids"
-          ></el-cascader>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="saveuserinfo">确 定</el-button>
+        <el-button type="danger" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveuserinfo">确定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="关联角色" :visible.sync="dialog_userrole" top="10px">
+      <el-form :model="user_role_form" label-width="80px" label-position="right" size="small">
+        <el-checkbox-group v-model="user_role_form.roleids">
+          <el-checkbox v-for="item in rolelist" :key="item.id" :label="item.id">{{item.name}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialog_userrole = false">取消</el-button>
+        <el-button type="primary" @click="save_user_role">确定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog
+      title="关联组织节点"
+      :visible.sync="dialog_userorg_show"
+      @opened="load_user_org"
+      top="10px"
+    >
+      <el-tree :data="orgtree" :show-checkbox="true" default-expand-all node-key="id" ref="orgtree"></el-tree>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialog_userorg_show = false">取消</el-button>
+        <el-button type="primary" @click="save_user_orgnodes">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -147,10 +168,11 @@
 <script>
 import QueryBar from "@/components/QueryBar/querybar.vue";
 import UserFun from "@/api/usermgr/index";
-import OrgFun from "@/api/organizemgr/index";
+import OrgFun from "@/api/organize/index";
 import ProvinceFun from "@/api/utils/province";
 import { getToken } from "@/utils/auth";
 import Tool from "@/api/utils/tool";
+import RoleFun from "@/api/rolemgr/index";
 export default {
   components: {
     "query-bar": QueryBar
@@ -158,17 +180,29 @@ export default {
   data() {
     return {
       formtitle: "新增用户",
+      dialog_userrole: false,
       dialogVisible: false,
+      dialog_userorg_show: false,
       headers: {
         Accept: "application/json",
         Authorization: "Bearer " + getToken()
       },
       upload_headimg_path: UserFun.head_image_path,
       headerUrl: "",
+      orgtree: [],
+      editflag: false,
       selectedrows: [],
       list: [],
-      orgids: [],
+      rolelist: [],
       searchdata: {},
+      user_role_form: {
+        id: 0,
+        roleids: []
+      },
+      user_org_form: {
+        id: 0,
+        orgnodes: []
+      },
       userform: {
         sex: 1,
         status: 1,
@@ -184,8 +218,7 @@ export default {
         province: 0,
         city: 0,
         district: 0,
-        provinces: [],
-        organizeids: []
+        provinces: []
       },
 
       city_props: {
@@ -211,30 +244,6 @@ export default {
           });
         }
       },
-      props: {
-        lazy: true,
-        multiple: true,
-        checkStrictly: true,
-        lazyLoad(node, resolve) {
-          let id = 0;
-          if (node.level !== 0) {
-            id = node.value;
-          }
-          OrgFun.list({ pid: id }).then(res => {
-            let nodes = res.result.data.map(function(i) {
-              let retitem = {
-                value: i.id,
-                label: i.name
-              };
-              if (i.orgtype === "03") {
-                retitem.leaf = true;
-              }
-              return retitem;
-            });
-            resolve(nodes);
-          });
-        }
-      },
       rules: {
         usercode: [
           { required: true, message: "请输入用户编码", trigger: "blur" }
@@ -248,15 +257,7 @@ export default {
             type: "array",
             required: true,
             message: "请选择地区",
-            trigger: ["blur", "change"]
-          }
-        ],
-        organizeids: [
-          {
-            type: "array",
-            required: true,
-            message: "请选择组织机构",
-            trigger: ["blur", "change"]
+            trigger: "change"
           }
         ]
       },
@@ -267,6 +268,7 @@ export default {
   },
   mounted() {
     this.getlist();
+    this.getrolelist();
   },
   methods: {
     querydata(data) {
@@ -286,46 +288,82 @@ export default {
         this.recordcount = res.result.total;
       });
     },
+    getrolelist() {
+      RoleFun.list({
+        pagesize: 65535
+      })
+        .then(res => {
+          this.rolelist = res.result.data;
+        })
+        .catch(() => {});
+    },
     AddUser() {
+      this.userform.usercode = "";
+      this.userform.username = "";
+      this.userform.password = "";
+      this.userform.idno = "";
+      this.userform.birthday = "";
+      this.userform.tel = "";
+      this.userform.email = "";
+      this.userform.adress = "";
+      this.userform.province = 0;
+      this.userform.city = 0;
+      this.userform.district = 0;
+      this.userform.orgids = [];
+      this.userform.provinces = [];
+      this.headerUrl = "";
+      this.editflag = false;
       this.dialogVisible = true;
     },
     saveuserinfo() {
       this.$refs["userform"].validate(v => {
         if (v) {
-          if (
-            this.userform.province === 0 ||
-            this.userform.city === 0 ||
-            this.userform.district === 0
-          ) {
-            this.$message.error("请选择地区");
-            return false;
+          if (this.userform.id > 0) {
+            UserFun.edit(this.userform).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogVisible = false;
+                this.$refs["userform"].resetFields();
+                this.getlist();
+              }
+            });
+          } else {
+            UserFun.add(this.userform).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.$refs["userform"].resetFields();
+                this.dialogVisible = false;
+              }
+            });
           }
-          if (this.orgids.length === 0) {
-            this.$message.error("请选择组织");
-            return false;
-          }
-          UserFun.add(this.userform).then(res => {
-            this.$message.info(res.msg);
-            if (res.code === 1) {
-              this.$refs["userform"].resetFields();
-              this.dialogVisible = false;
-            }
-          });
         } else {
           return false;
         }
       });
     },
     useredit(user) {
-      this.userform = user;
-      this.userform.username = user.name;
-      this.userform.birthday = user.birthdate;
-      this.headerUrl = Tool.baseurl + "/storage/" + this.userform.headimg;
-      this.formtitle = "编辑用户";
-      this.dialogVisible = true;
-      if (user.province !== 0 && user.city !== 0 && user.district) {
-        this.provinces = [user.province, user.city, user.district];
-      }
+      UserFun.find({ id: user.id })
+        .then(res => {
+          this.userform = res.result;
+          this.userform.username = res.result.name;
+          this.userform.birthday = res.result.birthdate;
+          this.headerUrl = Tool.baseurl + "/storage/" + res.result.headimg;
+          this.formtitle = "编辑用户";
+          this.editflag = true;
+          this.dialogVisible = true;
+          if (
+            res.result.province !== 0 &&
+            res.result.city !== 0 &&
+            res.result.district
+          ) {
+            this.userform.provinces = [
+              res.result.province,
+              res.result.city,
+              res.result.district
+            ];
+          }
+        })
+        .catch(() => {});
     },
     handleSelectionChange(rows) {
       this.selectedrows = rows;
@@ -339,11 +377,9 @@ export default {
       this.getlist();
     },
     selected_org(n) {
-      console.log(n);
-      this.userform.organizeids = n;
+      this.userform.orgids = n;
     },
     choosed_province(value) {
-      console.log(value);
       if (value.length >= 3) {
         this.userform.province = value[0];
         this.userform.city = value[1];
@@ -399,6 +435,64 @@ export default {
       this.$message.info(res.msg);
       this.headerUrl = res.filepath;
       this.userform.headimg = res.filename;
+    },
+    userrole(row) {
+      UserFun.getuserroles({
+        id: row.id
+      }).then(res => {
+        this.user_role_form.id = row.id;
+        this.user_role_form.roleids = res.result.map(function(i) {
+          return i.id;
+        });
+        this.dialog_userrole = true;
+      });
+    },
+    userorg(row) {
+      OrgFun.all_tree_nodes({
+        id: 0
+      })
+        .then(res => {
+          this.user_org_form.id = row.id;
+          this.orgtree = res.result;
+          this.dialog_userorg_show = true;
+        })
+        .catch(() => {});
+    },
+    load_user_org() {
+      UserFun.getuserorgs({ id: this.user_org_form.id })
+        .then(res => {
+          console.log(res);
+          let checkednodes = res.result.map(function(i) {
+            return i.id;
+          });
+          this.$refs.orgtree.setCheckedKeys(checkednodes);
+        })
+        .catch(() => {});
+    },
+    save_user_role() {
+      UserFun.saverole({
+        id: this.user_role_form.id,
+        roleids: this.user_role_form.roleids
+      }).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.dialog_userrole = false;
+          this.getrolelist();
+        }
+      });
+    },
+    save_user_orgnodes() {
+      let nodes = this.$refs.orgtree.getCheckedNodes();
+      this.user_org_form.orgnodes = nodes;
+      UserFun.saveorgnodes(this.user_org_form).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.dialog_userorg_show = false;
+        }
+      });
+    },
+    dialog_user_closed() {
+      this.$refs["userform"].resetFields();
     }
   }
 };

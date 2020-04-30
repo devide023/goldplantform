@@ -13,15 +13,18 @@
           :filter-node-method="filterNode"
           ref="tree"
           highlight-current
+          @node-click="click_node_handle"
         ></el-tree>
       </el-col>
       <el-col :span="18">
         <el-table :data="orguserlist">
-          <el-table-column label="姓名"></el-table-column>
-          <el-table-column label="代号"></el-table-column>
-          <el-table-column label="性别"></el-table-column>
-          <el-table-column label="电话"></el-table-column>
-          <el-table-column label="身份证"></el-table-column>
+          <el-table-column label="姓名" prop="name"></el-table-column>
+          <el-table-column label="代号" prop="usercode"></el-table-column>
+          <el-table-column label="性别" prop="sex"></el-table-column>
+          <el-table-column label="电话" prop="tel"></el-table-column>
+          <el-table-column label="身份证" prop="idno"></el-table-column>
+          <el-table-column label="邮箱" prop="email"></el-table-column>
+          <el-table-column label="地址" prop="adress"></el-table-column>
         </el-table>
       </el-col>
     </el-row>
@@ -246,7 +249,15 @@ export default {
         this.formdialog = false;
       });
     },
-    dialog_opened_handle() {}
+    dialog_opened_handle() {},
+    click_node_handle(data, node, com) {
+      let nodeid = data.id;
+      OrgFun.get_orgnode_users({
+        id: nodeid
+      }).then(res => {
+        this.orguserlist = res.result;
+      });
+    }
   }
 };
 </script>

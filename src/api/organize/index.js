@@ -69,5 +69,12 @@ export default {
             url: '/organize/edited_node',
             data: data
         });
+    },
+    get_orgnode_users: (data) => {
+        return request({
+            url: '/organize/getorgusers',
+            method: 'get',
+            params: data
+        });
     }
 }

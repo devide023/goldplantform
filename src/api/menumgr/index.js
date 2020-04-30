@@ -56,5 +56,12 @@ export default {
             url: '/menu/del',
             params: data
         });
+    },
+    all_menutree: (data) => {
+        return request({
+            url: '/menu/all_menu_tree',
+            method: 'get',
+            params: data
+        });
     }
 }

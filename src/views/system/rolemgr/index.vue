@@ -25,8 +25,6 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="edit_role(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="role_menu(scope.row)">关联菜单</el-dropdown-item>
-              <el-dropdown-item @click.native="role_user(scope.row)">关联用户</el-dropdown-item>
-              <el-dropdown-item @click.native="role_route(scope.row)">关联路由</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -62,7 +60,12 @@
           <el-input v-model="formrole.name" placeholder="请输入角色名称"></el-input>
         </el-form-item>
         <el-form-item label="关联菜单" prop="menus">
-          <el-cascader :props="menu_props" v-model="formrole.menus" style="width:100%;"></el-cascader>
+          <el-cascader
+            :options="menu_options"
+            :props="menu_props"
+            v-model="formrole.menus"
+            style="width:100%;"
+          ></el-cascader>
         </el-form-item>
         <el-form-item label="关联用户" prop="users">
           <el-select
@@ -72,12 +75,7 @@
             placeholder="请选择用户"
             style="width:100%;"
           >
-            <el-option
-              v-for="(item,index) in userlist"
-              :key="index"
-              :label="item.name"
-              :value="item.id"
-            >
+            <el-option v-for="item in userlist" :key="item.id" :label="item.name" :value="item.id">
               <span style="float: left">{{ item.name }}</span>
               <span
                 style="float: right;margin-right:20px; color: #8492a6; font-size: 13px"
@@ -95,8 +93,8 @@
             style="width:100%;"
           >
             <el-option
-              v-for="(item,index) in routelist"
-              :key="index"
+              v-for="item in routelist"
+              :key="item.id"
               :label="item.route"
               :value="item.id"
             >
@@ -117,8 +115,21 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogvisiable = false">取 消</el-button>
-        <el-button type="primary" @click="submitdata">确 定</el-button>
+        <el-button type="danger" @click="dialogvisiable = false">取消</el-button>
+        <el-button type="primary" @click="submitdata">确定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog
+      title="关联菜单"
+      :visible.sync="dialog_rolemenus_show"
+      top="10px"
+      @opened="dialog_rolemenu_opened"
+    >
+      <el-tree :data="menutreedata" node-key="id" show-checkbox accordion ref="rolemenu_tree"></el-tree>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialog_rolemenus_show = false">取消</el-button>
+        <el-button type="primary" @click="save_role_menus">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -145,6 +156,12 @@ export default {
       selectedrows: [],
       rowobj: {},
       dialogvisiable: false,
+      dialog_rolemenus_show: false,
+      menutreedata: [],
+      role_menus_form: {
+        roleid: 0,
+        menuids: []
+      },
       formrole: {
         status: 1,
         menus: [],
@@ -153,26 +170,9 @@ export default {
         name: "",
         note: ""
       },
+      menu_options: [],
       menu_props: {
-        lazy: true,
-        multiple: true,
-        lazyLoad(node, resolve) {
-          let pid = 0;
-          if (node.level !== 0) {
-            pid = node.value;
-          }
-          MenuFun.list({ pid: pid, pagesize: 65535 }).then(res => {
-            let nodes = res.result.data;
-            let d = nodes.map(function(i) {
-              let t = { label: i.name, value: i.id };
-              if (i.menutype === "03") {
-                t.leaf = true;
-              }
-              return t;
-            });
-            resolve(d);
-          });
-        }
+        multiple: true
       },
       rules: {
         name: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
@@ -210,6 +210,7 @@ export default {
     this.getlist();
     this.getroutelist();
     this.getuserlist();
+    this.getmenuoptions();
   },
   methods: {
     getlist() {
@@ -233,6 +234,11 @@ export default {
         this.userlist = res.result.data;
       });
     },
+    getmenuoptions() {
+      MenuFun.all_menutree({ id: 0 }).then(res => {
+        this.menu_options = res.result;
+      });
+    },
     queryhandle(data) {
       console.log(data);
       this.searchdata = data;
@@ -240,10 +246,15 @@ export default {
     add_role() {
       this.dialogvisiable = true;
       this.editflag = false;
+      this.formrole.id = 0;
+      this.formrole.menus = [];
+      this.formrole.routes = [];
+      this.formrole.users = [];
+      this.formrole.name = "";
+      this.formrole.note = "";
     },
     submitdata() {
       this.$refs.formrole.validate(v => {
-        console.log(v);
         if (v) {
           if (this.formrole.id > 0) {
             RoleFun.updaterole({
@@ -285,15 +296,35 @@ export default {
       });
     },
     edit_role(row) {
-      this.formrole = row;
-      this.rowobj = row;
-      this.dialogtitle = "编辑";
-      this.dialogvisiable = true;
-      this.editflag = true;
+      RoleFun.rolerel({
+        id: row.id
+      }).then(res => {
+        this.editflag = true;
+        this.formrole = row;
+        this.rowobj = row;
+        this.dialogtitle = "编辑";
+        this.formrole.routes = res.result.routes.map(function(i) {
+          return i.id;
+        });
+        this.formrole.users = res.result.users.map(function(i) {
+          return i.id;
+        });
+        this.formrole.menus = res.menuspath;
+
+        this.dialogvisiable = true;
+      });
     },
-    role_menu(row) {},
-    role_user(row) {},
-    role_route(row) {},
+    role_menu(row) {
+      MenuFun.all_menutree({
+        id: 0
+      })
+        .then(res => {
+          this.menutreedata = res.result;
+          this.role_menus_form.roleid = row.id;
+          this.dialog_rolemenus_show = true;
+        })
+        .catch(() => {});
+    },
     handleSelectionChange(val) {
       this.selectedrows = val;
     },
@@ -303,22 +334,33 @@ export default {
     handleCurrentChange(value) {
       this.pageindex = value;
     },
-    dialog_openhandle() {
-      if (this.editflag) {
-        RoleFun.menupath({ id: this.rowobj.id }).then(res => {
-          this.formrole.menus = res.result;
+    dialog_openhandle() {},
+    dialog_rolemenu_opened() {
+      RoleFun.getrolemenus({
+        id: this.role_menus_form.roleid
+      }).then(res => {
+        let checkeditems = res.result.map(function(i) {
+          return i.id;
         });
-        RoleFun.rolerel({
-          id: this.rowobj.id
-        }).then(res => {
-          this.formrole.routes = res.result.routes.map(function(i) {
-            return i.id;
-          });
-          this.formrole.users = res.result.users.map(function(i) {
-            return i.id;
-          });
-        });
-      }
+        this.$refs.rolemenu_tree.setCheckedKeys(checkeditems);
+      });
+    },
+    save_role_menus() {
+      let menus = this.$refs.rolemenu_tree.getCheckedNodes(false, true);
+      this.role_menus_form.menuids = menus.map(function(i) {
+        return i.id;
+      });
+      RoleFun.saverolemenus({
+        id: this.role_menus_form.roleid,
+        menuids: this.role_menus_form.menuids
+      })
+        .then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.dialog_rolemenus_show = false;
+          }
+        })
+        .catch(() => {});
     }
   }
 };

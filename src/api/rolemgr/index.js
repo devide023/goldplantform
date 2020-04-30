@@ -29,11 +29,18 @@ export default {
             params: data
         })
     },
-    menupath: function (data) {
+    getrolemenus: (data) => {
         return request({
-            url: '/role/rolemenupath',
+            url: '/role/menus',
             method: 'get',
             params: data
+        });
+    },
+    saverolemenus: (data) => {
+        return request({
+            url: '/role/rolemenu',
+            method: 'post',
+            data: data
         });
     }
 }

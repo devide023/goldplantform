@@ -46,5 +46,17 @@ export default {
             method: 'get',
             url: '/baseinfo/orgtypes'
         })
+    },
+    contracttypes: () => {
+        return request({
+            method: 'get',
+            url: '/baseinfo/contracttypes',
+        });
+    },
+    contractstatus: () => {
+        return request({
+            url: '/baseinfo/contractstatus',
+            method: 'get'
+        });
     }
 }

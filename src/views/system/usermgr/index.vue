@@ -1,5 +1,3 @@
-import { TRUE } from 'node-sass';
-import organize from '../../../api/organize';
 <template>
   <div>
     <query-bar @query="querydata">

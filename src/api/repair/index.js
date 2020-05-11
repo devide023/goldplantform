@@ -28,5 +28,12 @@ export default {
             method: 'get',
             params: data
         });
+    },
+    repairno: () => {
+        return request({
+            url: '/repair/repairno',
+            method: 'get'
+        });
     }
+
 }

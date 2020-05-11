@@ -1,10 +1,6 @@
 <template>
   <div>
-    <query-bar @query="querydata">
-      <template #query_btn>
-        <el-button size="small" type="success" icon="el-icon-plus" @click="btn_addcontract">新增合同</el-button>
-      </template>
-    </query-bar>
+    <query-bar @query="querydata" @contractadd="btn_addcontract"></query-bar>
     <el-table :data="list">
       <el-table-column label="合同状态" prop="contractstatus.name"></el-table-column>
       <el-table-column label="合同编号" prop="contractno"></el-table-column>
@@ -192,7 +188,7 @@
 </template>
 
 <script>
-import QueryBar from "@/components/QueryBar/querybar";
+import QueryBar from "@/components/QueryBar/contract_querybar";
 import ContractFn from "@/api/contract/index";
 import BaseInfo from "@/api/baseinfo/index";
 import { parseTime } from "@/utils/index";
@@ -313,7 +309,14 @@ export default {
         this.getcontractfiles(this.uploaddata.contractid);
       });
     },
-    querydata(data) {},
+    querydata(data) {
+      data.pagesize = this.pagesize;
+      console.log(data);
+      ContractFn.list(data).then(res => {
+        this.list = res.result.data;
+        this.recordcount = res.result.total;
+      });
+    },
     btn_addcontract() {
       ContractFn.getcontractno().then(res => {
         this.editflag = false;

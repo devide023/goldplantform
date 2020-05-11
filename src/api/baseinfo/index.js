@@ -58,5 +58,17 @@ export default {
             url: '/baseinfo/contractstatus',
             method: 'get'
         });
+    },
+    repairtypes: () => {
+        return request({
+            url: '/baseinfo/repairtypes',
+            method: 'get'
+        });
+    },
+    repairstatus: () => {
+        return request({
+            url: '/baseinfo/repairstatus',
+            method: 'get'
+        });
     }
 }

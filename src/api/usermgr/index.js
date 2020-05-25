@@ -87,5 +87,19 @@ export default {
             url: '/user/enable',
             data: data
         });
+    },
+    saveuser_permission: (data) => {
+        return request({
+            method: 'post',
+            url: '/user/permission',
+            data: data
+        });
+    },
+    user_permissions: (data) => {
+        return request({
+            method: 'get',
+            url: '/user/userpermissions',
+            params: data
+        });
     }
 }

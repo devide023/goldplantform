@@ -8,7 +8,10 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
-    menus: []
+    menus: [],
+    orgid: 0,
+    userid: 0,
+    companyid: 0
   }
 }
 
@@ -29,6 +32,15 @@ const mutations = {
   },
   SET_MENUS: (state, menus) => {
     state.menus = menus;
+  },
+  SET_USERID: (state, userid) => {
+    state.userid = userid;
+  },
+  SET_ORGID: (state, orgid) => {
+    state.orgid = orgid;
+  },
+  SET_COMPANYID: (state, companyid) => {
+    state.companyid = companyid;
   }
 }
 
@@ -58,6 +70,9 @@ const actions = {
         commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
+        commit('SET_COMPANYID', response.user.companyid)
+        commit('SET_ORGID', response.user.orgid)
+        commit('SET_USERID', response.user.userid)
         let routelist = get_userroutes(response.menulist)
         let allroutes = constantRoutes.concat(routelist)
         router.addRoutes(allroutes);

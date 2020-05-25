@@ -42,6 +42,8 @@
               <el-dropdown-item v-has="{fun:'edit'}" @click.native="useredit(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="userrole(scope.row)">关联角色</el-dropdown-item>
               <el-dropdown-item @click.native="userorg(scope.row)">关联组织节点</el-dropdown-item>
+              <el-dropdown-item @click.native="userpermission(scope.row)">数据权限</el-dropdown-item>
+              <el-dropdown-item @click.native="mpsetting(scope.row)">小程序设置</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -77,7 +79,7 @@
           <el-input v-model="userform.usercode"></el-input>
         </el-form-item>
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="userform.username"></el-input>
+          <el-input v-model="userform.username" @input="updateView($event)"></el-input>
         </el-form-item>
         <el-form-item label="性别">
           <el-radio-group v-model="userform.sex">
@@ -160,6 +162,42 @@
         <el-button type="primary" @click="save_user_orgnodes">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog
+      title="设置用户数据范围"
+      :visible.sync="dialog_permission_show"
+      top="10px"
+      @opened="load_permission_data"
+    >
+      <el-tree
+        :data="permission_tree"
+        :show-checkbox="true"
+        default-expand-all
+        node-key="id"
+        ref="permissiontree"
+      ></el-tree>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialog_permission_show = false">取消</el-button>
+        <el-button type="primary" @click="save_user_permission">确定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="小程序设置" :visible.sync="dialog_mp_show" top="10px">
+      <el-tabs v-model="activeName" type="card" @tab-click="tabhandleClick">
+        <el-tab-pane label="功能" name="mpfun">
+          <el-checkbox-group v-model="mpform.mpfuns">
+            <el-checkbox v-for="item in mpfunlist" :key="item.id" :label="item.id">{{item.name}}</el-checkbox>
+          </el-checkbox-group>
+        </el-tab-pane>
+        <el-tab-pane label="菜单" name="mpmenu">
+          <el-checkbox-group v-model="mpform.mpmenus">
+            <el-checkbox v-for="item in mpmenulist" :key="item.id" :label="item.id">{{item.name}}</el-checkbox>
+          </el-checkbox-group>
+        </el-tab-pane>
+      </el-tabs>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialog_mp_show = false">取消</el-button>
+        <el-button type="primary" @click="save_user_mpsetting">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -171,6 +209,8 @@ import ProvinceFun from "@/api/utils/province";
 import { getToken } from "@/utils/auth";
 import Tool from "@/api/utils/tool";
 import RoleFun from "@/api/rolemgr/index";
+import BaseFn from "@/api/baseinfo/index";
+import MpFn from "@/api/minipro/index";
 export default {
   components: {
     "query-bar": QueryBar
@@ -181,6 +221,11 @@ export default {
       dialog_userrole: false,
       dialogVisible: false,
       dialog_userorg_show: false,
+      dialog_permission_show: false,
+      dialog_mp_show: false,
+      activeName: "mpfun",
+      mpfunlist: [],
+      mpmenulist: [],
       headers: {
         Accept: "application/json",
         Authorization: "Bearer " + getToken()
@@ -188,6 +233,7 @@ export default {
       upload_headimg_path: UserFun.head_image_path,
       headerUrl: "",
       orgtree: [],
+      permission_tree: [],
       editflag: false,
       selectedrows: [],
       list: [],
@@ -200,6 +246,15 @@ export default {
       user_org_form: {
         id: 0,
         orgnodes: []
+      },
+      user_permission_form: {
+        id: 0,
+        orgids: []
+      },
+      mpform: {
+        id: 0,
+        mpfuns: [],
+        mpmenus: []
       },
       userform: {
         sex: 1,
@@ -267,6 +322,8 @@ export default {
   mounted() {
     this.getlist();
     this.getrolelist();
+    this.getmpfunlist();
+    this.getmpmenulist();
   },
   methods: {
     querydata(data) {
@@ -294,6 +351,16 @@ export default {
           this.rolelist = res.result.data;
         })
         .catch(() => {});
+    },
+    getmpfunlist() {
+      BaseFn.funcodelist().then(res => {
+        this.mpfunlist = res.result;
+      });
+    },
+    getmpmenulist() {
+      MpFn.mpmenulist().then(res => {
+        this.mpmenulist = res.result;
+      });
     },
     AddUser() {
       this.userform.usercode = "";
@@ -491,6 +558,66 @@ export default {
     },
     dialog_user_closed() {
       this.$refs["userform"].resetFields();
+    },
+    updateView(e) {
+      this.$forceUpdate();
+    },
+    userpermission(row) {
+      this.user_permission_form.id = row.id;
+      OrgFun.all_tree_nodes({
+        id: 2
+      })
+        .then(res => {
+          this.permission_tree = res.result;
+          this.dialog_permission_show = true;
+        })
+        .catch(() => {});
+    },
+    load_permission_data() {
+      UserFun.user_permissions({ id: this.user_permission_form.id })
+        .then(res => {
+          console.log(res);
+          let checkednodes = res.result;
+          this.$refs.permissiontree.setCheckedKeys(checkednodes);
+        })
+        .catch(() => {});
+    },
+    save_user_permission() {
+      let nodes = this.$refs.permissiontree.getCheckedNodes();
+      this.user_permission_form.orgids = nodes;
+      UserFun.saveuser_permission(this.user_permission_form).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.dialog_permission_show = false;
+        }
+      });
+    },
+    mpsetting(row) {
+      MpFn.get_usersetting({
+        userid: row.id
+      }).then(res => {
+        console.log(res);
+        this.dialog_mp_show = true;
+        this.mpform.id = row.id;
+        this.mpform.mpfuns = res.result.funs.map(function(i) {
+          return i.funid;
+        });
+        this.mpform.mpmenus = res.result.menus.map(function(i) {
+          return i.mpmenuid;
+        });
+      });
+    },
+    save_user_mpsetting() {
+      MpFn.save_user_mpsetting(this.mpform).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.dialog_mp_show = false;
+        }
+      });
+    },
+    tabhandleClick(tab, event) {
+      console.log(tab);
+      this.activeName = tab.name;
     }
   }
 };

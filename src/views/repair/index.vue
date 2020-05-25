@@ -87,7 +87,7 @@ import { rules } from '../../../.eslintrc';
           </el-select>
         </el-form-item>
         <el-form-item label="报修单号" prop="repairno">
-          <el-input v-model="form.repairno" placeholder="报修单号"></el-input>
+          <el-input v-model="form.repairno" readonly placeholder="报修单号"></el-input>
         </el-form-item>
         <el-form-item label="报修标题" prop="title">
           <el-input v-model="form.title" placeholder="标题"></el-input>

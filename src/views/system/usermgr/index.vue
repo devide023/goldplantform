@@ -156,7 +156,15 @@
       @opened="load_user_org"
       top="10px"
     >
-      <el-tree :data="orgtree" :show-checkbox="true" default-expand-all node-key="id" ref="orgtree"></el-tree>
+      <el-tree
+        :data="orgtree"
+        :show-checkbox="true"
+        node-key="id"
+        ref="orgtree"
+        check-strictly
+        @node-click="orgtree_nodeclick_handle"
+        @check-change="orgtree_checkchange_handle"
+      ></el-tree>
       <div slot="footer" class="dialog-footer">
         <el-button type="danger" @click="dialog_userorg_show = false">取消</el-button>
         <el-button type="primary" @click="save_user_orgnodes">确定</el-button>
@@ -283,7 +291,7 @@ export default {
             id = node.value;
           }
           ProvinceFun.province(id).then(res => {
-            let nodes = res.result.data.map(function(i) {
+            let nodes = res.result.map(function(i) {
               let retitem = {
                 value: i.id,
                 label: i.name
@@ -328,8 +336,8 @@ export default {
   methods: {
     querydata(data) {
       this.searchdata = data;
-      this.getlist();
       this.pageindex = 1;
+      this.getlist();
     },
     getlist() {
       UserFun.userlist({
@@ -616,8 +624,17 @@ export default {
       });
     },
     tabhandleClick(tab, event) {
-      console.log(tab);
       this.activeName = tab.name;
+    },
+    orgtree_nodeclick_handle(data, checked, node) {
+      this.orgtree[0] = data.id;
+      this.$refs.orgtree.setCheckedNodes([data]);
+    },
+    orgtree_checkchange_handle(data, checked, node) {
+      if (checked) {
+        this.orgtree[0] = data.id;
+        this.$refs.orgtree.setCheckedNodes([data]);
+      }
     }
   }
 };

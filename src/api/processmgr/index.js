@@ -14,5 +14,19 @@ export default {
             method: 'post',
             data: data
         });
+    },
+    removeprocess: (data) => {
+        return request({
+            url: '/process/del',
+            method: 'get',
+            params: data
+        });
+    },
+    updateprocess: (data) => {
+        return request({
+            url: '/process/update',
+            method: 'post',
+            data: data
+        });
     }
 }

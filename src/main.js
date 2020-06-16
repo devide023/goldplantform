@@ -14,7 +14,7 @@ import router from '@/router/index'
 
 import '@/icons' // icon
 import '@/permission' // permission control
-
+import { parseTime } from '@/utils/index';
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

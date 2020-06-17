@@ -1,23 +1,26 @@
+import { formatTime } from '../../utils';
 <template>
   <div>
-    <div class="querybar">
-      <el-button type="primary" @click="querydata" icon="el-icon-search" size="small">查询</el-button>
-      <el-button type="success" @click="btn_add_book" icon="el-icon-plus" size="small">预订</el-button>
-    </div>
+    <query-bar @query="querydata" :shiplist="shiplist">
+      <template #query_btn>
+        <el-button type="success" @click="btn_add_book" icon="el-icon-plus" size="mini">预订</el-button>
+      </template>
+    </query-bar>
     <el-table :data="list">
       <el-table-column label="邮轮名称" prop="shipname.name"></el-table-column>
-      <el-table-column label="入住时段">
-        <template slot-scope="scope">
-          {{scope.row.bdate.substr(0,10)}}
-          <br />
-          {{scope.row.edate.substr(0,10)}}
-        </template>
+      <el-table-column label="入住日期">
+        <template slot-scope="scope">{{scope.row.bdate|formatdate}}</template>
+      </el-table-column>
+      <el-table-column label="退房日期">
+        <template slot-scope="scope">{{scope.row.edate|formatdate}}</template>
       </el-table-column>
       <el-table-column label="预订人" prop="bookname"></el-table-column>
       <el-table-column label="联系电话" prop="booktel"></el-table-column>
       <el-table-column label="人数" prop="bookcount"></el-table-column>
       <el-table-column label="费用" prop="amount"></el-table-column>
       <el-table-column label="备注" prop="booknote"></el-table-column>
+      <el-table-column label="预订人" prop="addusername.name"></el-table-column>
+      <el-table-column label="预订时间" prop="addtime"></el-table-column>
       <el-table-column label="操作" width="50" fixed="right">
         <template slot-scope="scope">
           <el-dropdown>
@@ -45,11 +48,18 @@
     ></el-pagination>
 
     <el-dialog :title="dialogtitle" :visible.sync="dialogshow" top="10px">
-      <el-form :model="form" ref="form" :rules="rules">
+      <el-form
+        :model="form"
+        ref="form"
+        :rules="rules"
+        size="small"
+        label-position="right"
+        label-width="80px"
+      >
         <fieldset>
           <legend>预订基本信息</legend>
-          <el-form-item label="邮轮" prop="shipno" label-position="rigth" label-width="80px">
-            <el-select v-model="form.shipno" size="small" style="width:100%">
+          <el-form-item label="邮轮" prop="shipno">
+            <el-select v-model="form.shipno" style="width:100%">
               <el-option
                 v-for="item in shiplist"
                 :key="item.code"
@@ -58,29 +68,28 @@
               >{{item.name}}</el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="入住日期" prop="hoteldate" label-position="rigth" label-width="80px">
+          <el-form-item label="入住日期" prop="hoteldate">
             <el-date-picker
               v-model="form.hoteldate"
               type="daterange"
               range-separator="至"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
-              size="small"
               value-format="yyyy-MM-dd"
               format="yyyy-MM-dd"
               style="width:100%"
             ></el-date-picker>
           </el-form-item>
-          <el-form-item label="姓名" prop="bookname" label-position="rigth" label-width="80px">
-            <el-input v-model="form.bookname" size="small"></el-input>
+          <el-form-item label="姓名" prop="bookname">
+            <el-input v-model="form.bookname"></el-input>
           </el-form-item>
-          <el-form-item label="联系电话" prop="booktel" label-position="rigth" label-width="80px">
-            <el-input v-model="form.booktel" size="small"></el-input>
+          <el-form-item label="联系电话" prop="booktel">
+            <el-input v-model="form.booktel"></el-input>
           </el-form-item>
-          <el-form-item label="人数" prop="bookcount" label-position="rigth" label-width="80px">
-            <el-input-number v-model="form.bookcount" :min="1" size="small"></el-input-number>
+          <el-form-item label="人数" prop="bookcount">
+            <el-input-number v-model="form.bookcount" :min="1"></el-input-number>
           </el-form-item>
-          <el-form-item label="备注" label-position="rigth" label-width="80px">
+          <el-form-item label="备注">
             <el-input v-model="form.booknote" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"></el-input>
           </el-form-item>
         </fieldset>
@@ -132,16 +141,84 @@
         <el-button type="primary" @click="submit_book_data">确定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog :title="dialogtitle" :visible.sync="dialogviewshow" top="10px">
+      <fieldset>
+        <legend>基本信息</legend>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>用房时段：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.bdate|formatdate}}至{{bookinfo.edate|formatdate}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>姓名：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.bookname}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>联系电话：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.booktel}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>预订人数：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.bookcount}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>费用：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.amount}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>备注：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.booknote}}</el-col>
+        </el-row>
+      </fieldset>
+      <fieldset>
+        <legend>房型详情</legend>
+        <el-table :data="bookinfo.details">
+          <el-table-column label="房型名称" prop="roomtype.name"></el-table-column>
+          <el-table-column label="单价" prop="price"></el-table-column>
+          <el-table-column label="数量" prop="qty"></el-table-column>
+          <el-table-column label="金额">
+            <template slot-scope="scope">{{scope.row.price * scope.row.qty}}</template>
+          </el-table-column>
+        </el-table>
+      </fieldset>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import HotelFn from "@/api/hotel/index";
+import QueryBar from "@/components/QueryBar/book_querybar";
+import { parseTime } from "@/utils/index";
 export default {
+  components: {
+    "query-bar": QueryBar
+  },
+  filters: {
+    formatdate: function(value) {
+      if (value) {
+        return parseTime(value, "{y}-{m}-{d}");
+      } else {
+        return value;
+      }
+    }
+  },
   data() {
     return {
       dialogshow: false,
       dialogtitle: "客房预订",
+      dialogviewshow: false,
       shiplist: [],
       roomtypelist: [],
       list: [],
@@ -150,6 +227,7 @@ export default {
         bookcount: 1,
         details: []
       },
+      bookinfo: {},
       rules: {
         shipno: [
           {
@@ -218,7 +296,12 @@ export default {
         this.recordcount = res.result.total;
       });
     },
-    querydata() {},
+    querydata(data) {
+      console.log(data);
+      this.pageindex = 1;
+      this.queryform = data;
+      this.getlist();
+    },
     btn_add_book() {
       this.dialogshow = true;
       this.dialogtitle = "客房预订";
@@ -267,12 +350,19 @@ export default {
       this.getlist();
     },
     book_edit(row) {},
-    book_view(row) {}
+    book_view(row) {
+      this.bookinfo = row;
+      this.dialogtitle = "预订查看";
+      this.dialogviewshow = true;
+    }
   }
 };
 </script>
 
 <style>
+.el-dialog__body {
+  padding-top: 0px;
+}
 .el-form-item {
   margin-bottom: 0px;
 }
@@ -284,5 +374,11 @@ export default {
   text-align: center;
   font-size: 14px;
   font-weight: bold;
+}
+.label {
+  font-weight: bold;
+  font-size: 13px;
+  text-align: right;
+  padding-right: 10px;
 }
 </style>

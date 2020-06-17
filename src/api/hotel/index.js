@@ -42,5 +42,40 @@ export default {
             method: 'post',
             data: data
         });
+    },
+    meallist: (data) => {
+        return request({
+            url: '/hotel/meallist',
+            method: 'get',
+            params: data
+        });
+    },
+    addmeal: (data) => {
+        return request({
+            url: '/hotel/addmeal',
+            method: 'post',
+            data: data
+        });
+    },
+    editmeal: (data) => {
+        return request({
+            url: '/hotel/editmeal',
+            method: 'post',
+            data: data
+        });
+    },
+    mealbooklist: (data) => {
+        return request({
+            url: '/hotel/mealbooklist',
+            method: 'get',
+            params: data
+        });
+    },
+    addmealbook: (data) => {
+        return request({
+            url: '/hotel/addmealbook',
+            method: 'post',
+            data: data
+        });
     }
 }

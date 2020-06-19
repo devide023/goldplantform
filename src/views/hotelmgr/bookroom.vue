@@ -6,6 +6,11 @@
       </template>
     </query-bar>
     <el-table :data="list">
+      <el-table-column label="状态">
+        <template slot-scope="scope">
+          <el-tag :type="typename(scope.row.status)">{{scope.row.statusname.name}}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="邮轮名称" prop="shipname.name"></el-table-column>
       <el-table-column label="入住日期">
         <template slot-scope="scope">{{scope.row.bdate|formatdate}}</template>
@@ -29,6 +34,7 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="book_edit(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
+              <el-dropdown-item v-if="scope.row.status === 1" @click.native="book_ok(scope.row)">确定</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -283,6 +289,23 @@ export default {
     this.getlist();
   },
   methods: {
+    typename(status) {
+      let colorname = "";
+      switch (status) {
+        case 1:
+          colorname = "success";
+          break;
+        case 2:
+          colorname = "primary";
+          break;
+        case 3:
+          colorname = "danger";
+          break;
+        default:
+          break;
+      }
+      return colorname;
+    },
     getshiplist() {
       HotelFn.shiplist().then(res => {
         this.shiplist = res.result;
@@ -382,6 +405,23 @@ export default {
       this.bookinfo = row;
       this.dialogtitle = "预订查看";
       this.dialogviewshow = true;
+    },
+    book_ok(row) {
+      this.$confirm("确认后待确认状态将转为确认状态,是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        HotelFn.book_room_ok({
+          id: row.id,
+          status: 2
+        }).then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      });
     },
     change(e) {
       this.$forceUpdate();

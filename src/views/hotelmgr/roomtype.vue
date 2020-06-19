@@ -7,7 +7,9 @@
     </div>
     <el-table :data="list">
       <el-table-column label="状态">
-        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status!==1?'danger':''">{{scope.row.status|statusname}}</el-tag>
+        </template>
       </el-table-column>
       <el-table-column label="房型名称" prop="name"></el-table-column>
       <el-table-column label="房型单价" prop="price"></el-table-column>

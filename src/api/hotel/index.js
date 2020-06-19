@@ -71,6 +71,13 @@ export default {
             data: data
         });
     },
+    book_room_ok: (data) => {
+        return request({
+            url: '/hotel/bookroom_ok',
+            method: 'post',
+            data: data
+        });
+    },
     edit_book_room: (data) => {
         return request({
             url: '/hotel/edit_bookroom',

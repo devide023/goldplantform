@@ -70,5 +70,11 @@ export default {
             url: '/baseinfo/repairstatus',
             method: 'get'
         });
+    },
+    bookstatus: () => {
+        return request({
+            url: '/baseinfo/bookstatus',
+            method: 'get'
+        });
     }
 }

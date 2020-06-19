@@ -54,8 +54,15 @@
       </el-table-column>
     </el-table>
     <el-dialog :title="dialogtitle" :visible.sync="dialogshow" top="10px">
-      <el-form :model="form" label-position="right" label-width="100px" size="small">
-        <el-form-item label="邮轮">
+      <el-form
+        :model="form"
+        ref="form"
+        :rules="rules"
+        label-position="right"
+        label-width="100px"
+        size="small"
+      >
+        <el-form-item label="邮轮" prop="shipno">
           <el-select
             v-model="form.shipno"
             :disabled="editflag"
@@ -70,7 +77,7 @@
             >{{item.name}}</el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="代理商">
+        <el-form-item label="代理商" prop="agentid">
           <el-select v-model="form.agentid" :disabled="editflag" placeholder="选择代理商">
             <el-option
               v-for="item in agentlist"
@@ -115,6 +122,22 @@ export default {
         status: 1,
         roomtypeqty: []
       },
+      rules: {
+        shipno: [
+          {
+            required: true,
+            message: "请选择邮轮",
+            trigger: blur
+          }
+        ],
+        agentid: [
+          {
+            required: true,
+            message: "请选代理商",
+            trigger: blur
+          }
+        ]
+      },
       recordcount: 0,
       pageindex: 1,
       pagesize: 15
@@ -129,10 +152,12 @@ export default {
   methods: {
     init() {
       let that = this;
+      this.form.status = 1;
+      this.form.roomtypeqty = [];
       this.shiproomtypelist.forEach(function(v, i) {
         that.form.roomtypeqty.push({
           roomtypeid: v.roomtypeid,
-          roomtypenmae: v.name,
+          roomtypenmae: v.roomtypename.name,
           qty: 0
         });
       });
@@ -163,9 +188,8 @@ export default {
     btn_add_place() {
       this.editflag = false;
       this.dialogtitle = "代理房型位置设置";
-      this.form = {
-        roomtypeqty: [{ qty: 0 }]
-      };
+      this.form.id = 0;
+      this.init();
       this.dialogshow = true;
     },
     calcqty(row, roomtypeid) {
@@ -187,23 +211,27 @@ export default {
       });
     },
     submit_agent_place() {
-      if (this.form.id > 0) {
-        AgentFn.editplace(this.form).then(res => {
-          this.$message.info(res.msg);
-          if (res.code === 1) {
-            this.dialogshow = false;
-            this.getlist();
+      this.$refs.form.validate(v => {
+        if (v) {
+          if (this.form.id > 0) {
+            AgentFn.editplace(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
+          } else {
+            AgentFn.addplace(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
           }
-        });
-      } else {
-        AgentFn.addplace(this.form).then(res => {
-          this.$message.info(res.msg);
-          if (res.code === 1) {
-            this.dialogshow = false;
-            this.getlist();
-          }
-        });
-      }
+        }
+      });
     },
     querydata() {
       this.pageindex = 1;
@@ -211,11 +239,6 @@ export default {
     },
     edit_agentplace(row) {
       this.editflag = true;
-      this.form.roomtypeqty = [
-        {
-          qty: 0
-        }
-      ];
       HotelFn.get_ship_roomtype_list({
         shipno: row.shipno
       }).then(res => {

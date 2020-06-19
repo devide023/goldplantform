@@ -8,9 +8,23 @@ export default {
             params: data
         });
     },
+    allshiplist: (data) => {
+        return request({
+            url: '/hotel/allshiplist',
+            method: 'get',
+            params: data
+        });
+    },
     roomtypelist: (data) => {
         return request({
             url: '/hotel/roomtypelist',
+            method: 'get',
+            params: data
+        });
+    },
+    agentlist: (data) => {
+        return request({
+            url: '/hotel/agentlist',
             method: 'get',
             params: data
         });
@@ -20,6 +34,20 @@ export default {
             url: '/hotel/addroomtype',
             method: 'post',
             data: data
+        });
+    },
+    add_ship_roomtype: (data) => {
+        return request({
+            url: '/hotel/add_shiproomtype',
+            method: 'post',
+            data: data
+        });
+    },
+    get_ship_roomtype_list: (data) => {
+        return request({
+            url: '/hotel/shiproomtypelist',
+            method: 'get',
+            params: data
         });
     },
     editroomtype: (data) => {
@@ -39,6 +67,13 @@ export default {
     add_book_room: (data) => {
         return request({
             url: '/hotel/bookroom',
+            method: 'post',
+            data: data
+        });
+    },
+    edit_book_room: (data) => {
+        return request({
+            url: '/hotel/edit_bookroom',
             method: 'post',
             data: data
         });
@@ -74,6 +109,13 @@ export default {
     addmealbook: (data) => {
         return request({
             url: '/hotel/addmealbook',
+            method: 'post',
+            data: data
+        });
+    },
+    editmealbook: (data) => {
+        return request({
+            url: '/hotel/editmealbook',
             method: 'post',
             data: data
         });

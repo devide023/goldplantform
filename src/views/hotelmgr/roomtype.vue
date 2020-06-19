@@ -9,7 +9,6 @@
       <el-table-column label="状态">
         <template slot-scope="scope">{{scope.row.status|statusname}}</template>
       </el-table-column>
-      <el-table-column label="邮轮名称" prop="shipname.name"></el-table-column>
       <el-table-column label="房型名称" prop="name"></el-table-column>
       <el-table-column label="房型单价" prop="price"></el-table-column>
       <el-table-column label="房型总数量" prop="totalqty"></el-table-column>
@@ -36,16 +35,6 @@
         label-position="right"
         label-width="80px"
       >
-        <el-form-item label="邮轮编号" prop="shipno">
-          <el-select v-model="form.shipno" placeholder="请选择邮轮">
-            <el-option
-              v-for="item in shiplist"
-              :key="item.code"
-              :value="item.code"
-              :label="item.name"
-            >{{item.name}}</el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="房型名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入房型名称"></el-input>
         </el-form-item>
@@ -75,16 +64,8 @@ export default {
       queryform: {},
       shiplist: [],
       list: [],
-      form: {
-        shipno: "05"
-      },
+      form: {},
       rules: {
-        shipno: [
-          {
-            required: true,
-            message: "请选择邮轮"
-          }
-        ],
         name: [
           {
             required: true,

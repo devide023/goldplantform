@@ -1,4 +1,3 @@
-import { formatTime } from '../../utils';
 <template>
   <div>
     <query-bar @query="querydata" :shiplist="shiplist">
@@ -81,16 +80,21 @@ import { formatTime } from '../../utils';
             ></el-date-picker>
           </el-form-item>
           <el-form-item label="姓名" prop="bookname">
-            <el-input v-model="form.bookname"></el-input>
+            <el-input v-model="form.bookname" @input="change($event)"></el-input>
           </el-form-item>
           <el-form-item label="联系电话" prop="booktel">
-            <el-input v-model="form.booktel"></el-input>
+            <el-input v-model="form.booktel" @input="change($event)"></el-input>
           </el-form-item>
           <el-form-item label="人数" prop="bookcount">
             <el-input-number v-model="form.bookcount" :min="1"></el-input-number>
           </el-form-item>
           <el-form-item label="备注">
-            <el-input v-model="form.booknote" type="textarea" :autosize="{ minRows: 2, maxRows: 4}"></el-input>
+            <el-input
+              v-model="form.booknote"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4}"
+              @input="change($event)"
+            ></el-input>
           </el-form-item>
         </fieldset>
         <fieldset>
@@ -224,6 +228,7 @@ export default {
       list: [],
       queryform: {},
       form: {
+        hoteldate: [],
         bookcount: 1,
         details: []
       },
@@ -304,6 +309,7 @@ export default {
     },
     btn_add_book() {
       this.dialogshow = true;
+      this.form = { hoteldate: [], details: [] };
       this.dialogtitle = "客房预订";
     },
     add_room() {
@@ -331,13 +337,23 @@ export default {
     submit_book_data() {
       this.$refs.form.validate(v => {
         if (v) {
-          HotelFn.add_book_room(this.form).then(res => {
-            this.$message.info(res.msg);
-            if (res.code === 1) {
-              this.dialogshow = false;
-              this.getlist();
-            }
-          });
+          if (this.form.id > 0) {
+            HotelFn.edit_book_room(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
+          } else {
+            HotelFn.add_book_room(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
+          }
         }
       });
     },
@@ -349,11 +365,26 @@ export default {
       this.pagesize = value;
       this.getlist();
     },
-    book_edit(row) {},
+    book_edit(row) {
+      this.form.id = row.id;
+      this.form.shipno = row.shipno;
+      this.form.bookname = row.bookname;
+      this.form.booktel = row.booktel;
+      this.form.booknote = row.booknote;
+      this.form.details = row.details;
+      this.form.hoteldate = [];
+      this.form.hoteldate.push(parseTime(row.bdate, "{y}-{m}-{d}"));
+      this.form.hoteldate.push(parseTime(row.edate, "{y}-{m}-{d}"));
+      this.dialogtitle = "编辑预订信息";
+      this.dialogshow = true;
+    },
     book_view(row) {
       this.bookinfo = row;
       this.dialogtitle = "预订查看";
       this.dialogviewshow = true;
+    },
+    change(e) {
+      this.$forceUpdate();
     }
   }
 };

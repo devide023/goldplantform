@@ -1,4 +1,3 @@
-import { rules } from '../../../.eslintrc';
 <template>
   <div>
     <div class="querybar">
@@ -28,6 +27,7 @@ import { rules } from '../../../.eslintrc';
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="edit_mealbook(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item @click.native="view_mealbook(scope.row)">详情</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -118,6 +118,45 @@ import { rules } from '../../../.eslintrc';
         <el-button type="primary" @click="submit_book_meal">确定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog :title="dialogtitle" :visible.sync="dialog_viewbookshow" top="10px">
+      <fieldset>
+        <legend>基本信息</legend>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>姓名：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.bookname}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>联系电话：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.booktel}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>费用：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.amount}}</el-col>
+        </el-row>
+        <el-row class="trow">
+          <el-col :span="3" class="label">
+            <label>备注：</label>
+          </el-col>
+          <el-col :span="21">{{bookinfo.booknote}}</el-col>
+        </el-row>
+      </fieldset>
+      <fieldset>
+        <legend>用餐详情</legend>
+        <el-table :data="bookinfo.details">
+          <el-table-column label="名称" prop="mealname.name"></el-table-column>
+          <el-table-column label="单价" prop="price"></el-table-column>
+          <el-table-column label="数量" prop="qty"></el-table-column>
+          <el-table-column label="金额" prop="amount"></el-table-column>
+        </el-table>
+      </fieldset>
+    </el-dialog>
   </div>
 </template>
 
@@ -128,6 +167,7 @@ export default {
     return {
       dialogtitle: "预订餐",
       dialogshow: false,
+      dialog_viewbookshow: false,
       shiplist: [],
       meallist: [],
       list: [],
@@ -139,6 +179,7 @@ export default {
         shipno: "",
         details: []
       },
+      bookinfo: {},
       rules: {
         shipno: [{ required: true, message: "请选择邮轮", trigger: "blur" }],
         bookname: [
@@ -228,15 +269,35 @@ export default {
     submit_book_meal() {
       this.$refs.form.validate(v => {
         if (v) {
-          HotelFn.addmealbook(this.form).then(res => {
-            this.$message.info(res.msg);
-            if (res.code === 1) {
-              this.dialogshow = false;
-              this.getlist();
-            }
-          });
+          if (this.form.id > 0) {
+            HotelFn.editmealbook(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
+          } else {
+            HotelFn.addmealbook(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.dialogshow = false;
+                this.getlist();
+              }
+            });
+          }
         }
       });
+    },
+    view_mealbook(row) {
+      this.bookinfo = row;
+      this.dialogtitle = "预订详情";
+      this.dialog_viewbookshow = true;
+    },
+    edit_mealbook(row) {
+      this.form = row;
+      this.dialogtitle = "编辑预订信息";
+      this.dialogshow = true;
     }
   }
 };

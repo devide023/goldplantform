@@ -28,14 +28,23 @@
       <el-button type="primary" icon="el-icon-search" @click="querydata" size="mini">查询</el-button>
       <el-button type="success" icon="el-icon-plus" size="mini" @click="btn_add_place">添加</el-button>
     </div>
+    <el-alert title="红色表示投放数量,紫色表示预订数量" type="warning" show-icon style="margin-bottom:10px;"></el-alert>
     <el-table :data="list" stripe border>
       <el-table-column label="邮轮" prop="shipname.name"></el-table-column>
       <el-table-column label="代理商" prop="agentname.name"></el-table-column>
       <el-table-column v-for="(item,index) in roomtypelist" :key="index" :label="item.name">
         <template slot-scope="scope">
-          {{
-          calcqty(scope.row,item.id)
-          }}
+          <span class="totalqty">
+            {{
+            calcqty(scope.row,item.id)
+            }}
+          </span>
+          <br />
+          <span class="bookqty">
+            {{
+            calcbookedqty(scope.row.shipno,scope.row.agentid,item.id)
+            }}
+          </span>
         </template>
       </el-table-column>
       <el-table-column label="操作人" prop="addusername.name"></el-table-column>
@@ -106,6 +115,7 @@
 <script>
 import HotelFn from "@/api/hotel/index";
 import AgentFn from "@/api/hotel/agent";
+import BookFn from "@/api/hotel/report";
 export default {
   data() {
     return {
@@ -116,6 +126,7 @@ export default {
       roomtypelist: [],
       shiproomtypelist: [],
       agentlist: [],
+      bookedroomlist: [],
       list: [],
       searchform: {},
       form: {
@@ -148,6 +159,7 @@ export default {
     this.getroomtypelist();
     this.getagentlist();
     this.getlist();
+    this.getbookedroomlist();
   },
   methods: {
     init() {
@@ -177,6 +189,11 @@ export default {
         this.agentlist = res.result;
       });
     },
+    getbookedroomlist() {
+      BookFn.bookroom_report().then(res => {
+        this.bookedroomlist = res.result;
+      });
+    },
     getlist() {
       this.searchform.page = this.pageindex;
       this.searchform.pagesize = this.pagesize;
@@ -197,10 +214,27 @@ export default {
         return i.roomtypeid === roomtypeid;
       });
       if (obj.length > 0) {
-        return obj[0].qty;
+        return parseFloat(obj[0].qty).toFixed(2);
       } else {
-        return 0.0;
+        return (0.0).toFixed(2);
       }
+    },
+    calcbookedqty(shipno, agentid, roomtypeid) {
+      let qty = 0.0;
+      this.bookedroomlist
+        .filter(i => {
+          return i.shipno === shipno && i.agentid === agentid;
+        })
+        .forEach(i => {
+          i.roomtypes
+            .filter(j => {
+              return j.roomtypeid === roomtypeid;
+            })
+            .forEach(j => {
+              qty = qty + parseFloat(j.qty);
+            });
+        });
+      return qty.toFixed(2);
     },
     ship_change_handle(v) {
       HotelFn.get_ship_roomtype_list({
@@ -236,6 +270,7 @@ export default {
     querydata() {
       this.pageindex = 1;
       this.getlist();
+      this.getbookedroomlist();
     },
     edit_agentplace(row) {
       this.editflag = true;
@@ -266,5 +301,15 @@ export default {
   padding-bottom: 10px;
   padding-left: 10px;
   padding-top: 10px;
+}
+.totalqty {
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+}
+.bookqty {
+  color: darkmagenta;
+  font-weight: bold;
+  font-size: 18px;
 }
 </style>

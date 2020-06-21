@@ -15,6 +15,13 @@ export default {
             params: data
         });
     },
+    enabelship: (data) => {
+        return request({
+            url: '/hotel/enableship',
+            method: 'get',
+            params: data
+        });
+    },
     roomtypelist: (data) => {
         return request({
             url: '/hotel/roomtypelist',

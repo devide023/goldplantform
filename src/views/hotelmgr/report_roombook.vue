@@ -1,19 +1,15 @@
 <template>
   <div>
     <div class="querybar">
-      <el-date-picker
-        v-model="searchform.date"
-        type="daterange"
-        range-separator="至"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
-        format="yyyy-MM-dd"
-        value-format="yyyy-MM-dd"
-        size="mini"
-        style="width:270px"
-        clearable
-      ></el-date-picker>
-      <el-select v-model="searchform.roomtype" placeholder="请选择房型" clearable size="mini">
+      <el-select v-model="searchform.shipno" clearable size="mini" placeholder="请选择邮轮">
+        <el-option
+          v-for="item in shiplist"
+          :key="item.id"
+          :value="item.code"
+          :label="item.name"
+        >{{item.name}}</el-option>
+      </el-select>
+      <el-select v-model="searchform.roomtypeid" placeholder="请选择房型" clearable size="mini">
         <el-option
           v-for="item in roomtypelist"
           :key="item.id"
@@ -21,7 +17,7 @@
           :label="item.name"
         >{{item.name}}</el-option>
       </el-select>
-      <el-select v-model="searchform.agent" placeholder="请选择代理商" clearable size="mini">
+      <el-select v-model="searchform.agentid" placeholder="请选择代理商" clearable size="mini">
         <el-option
           v-for="item in agentlist"
           :key="item.id"
@@ -32,11 +28,32 @@
 
       <el-button type="primary" icon="el-icon-search" size="mini" @click="querydata">查询</el-button>
     </div>
+    <el-alert title="红色表示投放数量,紫色表示预订数量" type="warning" show-icon style="margin-bottom:10px;"></el-alert>
     <el-table :data="list" border stripe>
-      <el-table-column label="代理商" prop="orgname"></el-table-column>
-      <el-table-column label="房型" prop="name"></el-table-column>
-      <el-table-column label="数量" prop="qty"></el-table-column>
-      <el-table-column label="费用" prop="je"></el-table-column>
+      <el-table-column label="邮轮" prop="shipname"></el-table-column>
+      <el-table-column label="代理商" prop="agentname"></el-table-column>
+      <el-table-column v-for="item in roomtypelist" :key="item.id" :label="item.name">
+        <template slot-scope="scope">
+          <span class="totalqty">
+            {{
+            calc_total_qty(scope.row.roomtypes,item.id)
+            }}
+          </span>
+          <br />
+          <span class="bookqty">
+            {{
+            calcqty(scope.row.roomtypes,item.id)
+            }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="费用">
+        <template slot-scope="scope">
+          {{
+          calcje(scope.row.roomtypes)
+          }}
+        </template>
+      </el-table-column>
     </el-table>
   </div>
 </template>
@@ -51,6 +68,7 @@ export default {
       searchform: {
         date: []
       },
+      shiplist: [],
       roomtypelist: [],
       agentlist: [],
       list: []
@@ -60,11 +78,17 @@ export default {
     let d1 = parseTime(new Date(), "{y}-{m}-{d}");
     this.searchform.date.push(d1);
     this.searchform.date.push(d1);
+    this.getshiplist();
     this.getroomtypelist();
     this.getagentlist();
     this.getlist();
   },
   methods: {
+    getshiplist() {
+      HotelFn.allshiplist().then(res => {
+        this.shiplist = res.result;
+      });
+    },
     getroomtypelist() {
       HotelFn.roomtypelist().then(res => {
         this.roomtypelist = res.result;
@@ -80,6 +104,25 @@ export default {
         this.list = res.result;
       });
     },
+    calcje(list) {
+      let totalje = 0;
+      list.forEach(i => {
+        totalje = totalje + parseFloat(i.amount);
+      });
+      return totalje.toFixed(2);
+    },
+    calc_total_qty(list, roomtypeid) {
+      let fi = list.filter(function(i) {
+        return i.roomtypeid === roomtypeid;
+      });
+      return fi.length > 0 ? parseFloat(fi[0].totalqty).toFixed(2) : 0;
+    },
+    calcqty(list, roomtypeid) {
+      let fi = list.filter(function(i) {
+        return i.roomtypeid === roomtypeid;
+      });
+      return fi.length > 0 ? parseFloat(fi[0].qty).toFixed(2) : 0;
+    },
     querydata() {
       this.getlist();
     }
@@ -92,5 +135,15 @@ export default {
   padding-top: 10px;
   padding-left: 10px;
   padding-bottom: 10px;
+}
+.totalqty {
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+}
+.bookqty {
+  color: darkmagenta;
+  font-weight: bold;
+  font-size: 18px;
 }
 </style>

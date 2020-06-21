@@ -35,6 +35,10 @@
               <el-dropdown-item @click.native="book_edit(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
               <el-dropdown-item v-if="scope.row.status === 1" @click.native="book_ok(scope.row)">确定</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.status === 1"
+                @click.native="book_disagree(scope.row)"
+              >拒绝</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -415,6 +419,23 @@ export default {
         HotelFn.book_room_ok({
           id: row.id,
           status: 2
+        }).then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      });
+    },
+    book_disagree(row) {
+      this.$confirm("你确定要拒绝该预订?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        HotelFn.book_room_ok({
+          id: row.id,
+          status: 3
         }).then(res => {
           this.$message.info(res.msg);
           if (res.code === 1) {

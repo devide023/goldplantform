@@ -1,3 +1,4 @@
+import { setUserInfo } from '../../utils/auth';
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
 import router from '@/router/index';
@@ -67,11 +68,12 @@ const actions = {
         }
         let strmenus = JSON.stringify(response.menulist);
         setMenus(strmenus);
+        setUserInfo(JSON.stringify(response.user));
         commit('SET_MENUS', strmenus);
         commit('SET_NAME', response.user.name)
         commit('SET_AVATAR', response.user.headimg)
-        commit('SET_COMPANYID', response.user.companyid)
-        commit('SET_ORGID', response.user.orgid)
+        commit('SET_COMPANYID', response.user.companyid[0])
+        commit('SET_ORGID', response.user.orgid[0])
         commit('SET_USERID', response.user.userid)
         let routelist = get_userroutes(response.menulist)
         let allroutes = constantRoutes.concat(routelist)

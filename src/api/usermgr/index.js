@@ -101,5 +101,12 @@ export default {
             url: '/user/userpermissions',
             params: data
         });
+    },
+    user_change_pwd: (data) => {
+        return request({
+            method: 'post',
+            url: '/user/changepwd',
+            data: data
+        });
     }
 }

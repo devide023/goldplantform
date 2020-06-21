@@ -16,20 +16,41 @@
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <router-link to="/">
-            <el-dropdown-item>Home</el-dropdown-item>
+            <el-dropdown-item>首页</el-dropdown-item>
           </router-link>
-          <a target="_blank" href="https://github.com/PanJiaChen/vue-admin-template/">
-            <el-dropdown-item>Github</el-dropdown-item>
-          </a>
-          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
-            <el-dropdown-item>Docs</el-dropdown-item>
-          </a>
+          <el-dropdown-item divided @click.native="changepwd">
+            <span style="display:block;">修改密码</span>
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">Log Out</span>
+            <span style="display:block;">注销</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <el-dialog :title="dialogtitle" :visible.sync="dialogshow" top="10px">
+      <el-form
+        :model="form"
+        ref="form"
+        :rules="rules"
+        label-position="right"
+        label-width="80px"
+        size="small"
+      >
+        <el-form-item label="原密码" prop="oldpwd">
+          <el-input v-model="form.oldpwd" type="password" placeholder="请输入原密码"></el-input>
+        </el-form-item>
+        <el-form-item label="新密码" prop="newpwd">
+          <el-input v-model="form.newpwd" type="password" placeholder="请输入新密码"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="newpwd1">
+          <el-input v-model="form.newpwd1" type="password" placeholder="请输入确定密码"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="danger" @click="dialogshow = false">取消</el-button>
+        <el-button type="primary" @click="submit_pwd">确定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -37,11 +58,42 @@
 import { mapGetters } from "vuex";
 import Breadcrumb from "@/components/Breadcrumb";
 import Hamburger from "@/components/Hamburger";
-
+import userfn from "@/api/usermgr/index";
+import { getUserInfo } from "@/utils/auth";
 export default {
   components: {
     Breadcrumb,
     Hamburger
+  },
+  data() {
+    return {
+      dialogshow: false,
+      dialogtitle: "修改密码",
+      form: {},
+      rules: {
+        oldpwd: [
+          {
+            required: true,
+            message: "请输入原始密码",
+            trigger: "blur"
+          }
+        ],
+        newpwd: [
+          {
+            required: true,
+            message: "请输入新密码",
+            trigger: "blur"
+          }
+        ],
+        newpwd1: [
+          {
+            required: true,
+            message: "请输入确认密码",
+            trigger: "blur"
+          }
+        ]
+      }
+    };
   },
   computed: {
     ...mapGetters(["sidebar", "avatar"])
@@ -49,6 +101,30 @@ export default {
   methods: {
     toggleSideBar() {
       this.$store.dispatch("app/toggleSideBar");
+    },
+    changepwd() {
+      this.dialogtitle = "修改密码";
+      this.dialogshow = true;
+    },
+    submit_pwd() {
+      this.$refs.form.validate(v => {
+        if (v) {
+          if (this.form.newpwd === this.form.newpwd1) {
+            let userinfo = JSON.parse(getUserInfo());
+            this.form.userid = userinfo.userid;
+            userfn.user_change_pwd(this.form).then(res => {
+              this.$message.info(res.msg);
+              if (res.code === 1) {
+                this.form = {};
+                this.dialogshow = false;
+              }
+            });
+          } else {
+            this.$message.info("确认密码和新密码不一致");
+            return false;
+          }
+        }
+      });
     },
     async logout() {
       await this.$store.dispatch("user/logout");

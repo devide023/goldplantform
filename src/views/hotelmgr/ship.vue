@@ -22,6 +22,14 @@
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="ship_room_type(scope.row)">房型</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.status == 1"
+                @click.native="disable_ship(scope.row)"
+              >禁用</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.status == 0"
+                @click.native="enable_ship(scope.row)"
+              >启用</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -106,6 +114,28 @@ export default {
           that.form.roomtypes.push(i.roomtypeid);
         });
         this.dialogshow = true;
+      });
+    },
+    disable_ship(row) {
+      HotelFn.enabelship({
+        id: row.id,
+        status: 0
+      }).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.getlist();
+        }
+      });
+    },
+    enable_ship(row) {
+      HotelFn.enabelship({
+        id: row.id,
+        status: 1
+      }).then(res => {
+        this.$message.info(res.msg);
+        if (res.code === 1) {
+          this.getlist();
+        }
       });
     },
     submit_ship_roomtype() {

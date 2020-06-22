@@ -34,9 +34,14 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="book_edit(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
-              <el-dropdown-item v-if="scope.row.status === 1" @click.native="book_ok(scope.row)">确定</el-dropdown-item>
+              <el-dropdown-item
+                v-has="{fun:'agree'}"
+                v-if="scope.row.status === 1"
+                @click.native="book_ok(scope.row)"
+              >确定</el-dropdown-item>
               <el-dropdown-item
                 v-if="scope.row.status === 1"
+                v-has="{fun:'disagree'}"
                 @click.native="book_disagree(scope.row)"
               >拒绝</el-dropdown-item>
             </el-dropdown-menu>

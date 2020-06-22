@@ -62,9 +62,11 @@
 import HotelFn from "@/api/hotel/index";
 import ReportFn from "@/api/hotel/report";
 import { parseTime } from "@/utils/index";
+import { getUserInfo } from "@/utils/auth";
 export default {
   data() {
     return {
+      userinfo: {},
       searchform: {
         date: []
       },
@@ -95,11 +97,22 @@ export default {
       });
     },
     getagentlist() {
-      HotelFn.agentlist().then(res => {
-        this.agentlist = res.result;
-      });
+      let userinfo = JSON.parse(getUserInfo());
+      if (userinfo.orgtyp === "05") {
+        HotelFn.agentlist({ id: userinfo.orgid }).then(res => {
+          this.agentlist = res.result;
+        });
+      } else {
+        HotelFn.agentlist().then(res => {
+          this.agentlist = res.result;
+        });
+      }
     },
     getlist() {
+      let userinfo = JSON.parse(getUserInfo());
+      if (userinfo.orgtyp === "05") {
+        this.searchform.agentid = userinfo.orgid;
+      }
       ReportFn.bookroom_report(this.searchform).then(res => {
         this.list = res.result;
       });

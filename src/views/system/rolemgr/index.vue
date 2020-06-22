@@ -16,7 +16,7 @@
       <el-table-column label="备注" prop="note" width="300px"></el-table-column>
       <el-table-column label="操作人" prop="adduser.name" width="200px"></el-table-column>
       <el-table-column label="操作日期" prop="addtime" width="200px"></el-table-column>
-      <el-table-column label="操作" fixed="right">
+      <el-table-column label="操作" width="50" fixed="right">
         <template slot-scope="scope">
           <el-dropdown>
             <span class="el-dropdown-link">

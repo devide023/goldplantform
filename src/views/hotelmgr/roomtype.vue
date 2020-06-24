@@ -12,6 +12,7 @@
         </template>
       </el-table-column>
       <el-table-column label="房型名称" prop="name"></el-table-column>
+      <el-table-column label="房型简称" prop="shortname"></el-table-column>
       <el-table-column label="房型单价" prop="price"></el-table-column>
       <el-table-column label="房型总数量" prop="totalqty"></el-table-column>
       <el-table-column label="操作" width="50" fixed="right">
@@ -39,6 +40,9 @@
       >
         <el-form-item label="房型名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入房型名称"></el-input>
+        </el-form-item>
+        <el-form-item label="房型简称" prop="shortname">
+          <el-input v-model="form.shortname" placeholder="请输入房型简称"></el-input>
         </el-form-item>
         <el-form-item label="房型单价" prop="price">
           <el-input type="number" v-model="form.price" placeholder="请输入房型单价"></el-input>
@@ -72,6 +76,12 @@ export default {
           {
             required: true,
             message: "请输入房型名称"
+          }
+        ],
+        shortname: [
+          {
+            required: true,
+            message: "请输入房型简称"
           }
         ],
         price: [

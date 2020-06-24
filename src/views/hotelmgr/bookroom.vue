@@ -17,7 +17,6 @@
           <el-tag :type="typename(scope.row.status)">{{scope.row.statusname.name}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="邮轮名称" prop="shipname.name"></el-table-column>
       <el-table-column label="入住日期">
         <template slot-scope="scope">{{scope.row.bdate|formatdate}}</template>
       </el-table-column>
@@ -26,6 +25,11 @@
       </el-table-column>
       <el-table-column label="预订人" prop="bookname"></el-table-column>
       <el-table-column label="联系电话" prop="booktel"></el-table-column>
+      <el-table-column label="用房明细">
+        <template slot-scope="scope">
+          <span style="font-size:15px;color:red;">{{statics_qty(scope.row.details)}}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="人数" prop="bookcount"></el-table-column>
       <el-table-column label="费用" prop="amount"></el-table-column>
       <el-table-column label="备注" prop="booknote"></el-table-column>
@@ -495,6 +499,13 @@ export default {
     change_price(e, index) {
       this.calc_amount(index);
       this.$forceUpdate();
+    },
+    statics_qty(list) {
+      let str = "";
+      list.forEach(i => {
+        str = str + i.roomtype.shortname + "：" + i.qty + " ";
+      });
+      return str;
     }
   }
 };

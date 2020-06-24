@@ -5,7 +5,13 @@
         <el-input v-model="queryform.name" placeholder="预订人" style="width:200px" size="mini"></el-input>
         <el-input v-model="queryform.tel" placeholder="联系电话" style="width:200px" size="mini"></el-input>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="querydata">查询</el-button>
-        <el-button type="success" icon="el-icon-plus" size="mini" @click="btn_book">预订</el-button>
+        <el-button
+          v-has="{fun:'add'}"
+          type="success"
+          icon="el-icon-plus"
+          size="mini"
+          @click="btn_book"
+        >预订</el-button>
       </el-row>
     </div>
     <el-table :data="list">
@@ -26,7 +32,7 @@
               <i class="el-icon-setting" style="font-size:16px;"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click.native="edit_mealbook(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item v-has="{fun:'edit'}" @click.native="edit_mealbook(scope.row)">编辑</el-dropdown-item>
               <el-dropdown-item @click.native="view_mealbook(scope.row)">详情</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -65,6 +71,9 @@
                 :label="item.name"
               >{{item.name}}</el-option>
             </el-select>
+          </el-form-item>
+          <el-form-item label="用餐时间" prop="mealdate">
+            <el-date-picker v-model="form.mealdate" placeholder="请选择用餐时间"></el-date-picker>
           </el-form-item>
           <el-form-item label="姓名" prop="bookname">
             <el-input v-model="form.bookname" placeholder="预订人姓名"></el-input>
@@ -182,6 +191,9 @@ export default {
       bookinfo: {},
       rules: {
         shipno: [{ required: true, message: "请选择邮轮", trigger: "blur" }],
+        mealdate: [
+          { required: true, message: "请选择用餐时间", trigger: "blur" }
+        ],
         bookname: [
           { required: true, message: "请输入预订人姓名", trigger: "blur" }
         ],

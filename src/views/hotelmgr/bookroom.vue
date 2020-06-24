@@ -2,7 +2,13 @@
   <div>
     <query-bar @query="querydata" :shiplist="shiplist">
       <template #query_btn>
-        <el-button type="success" @click="btn_add_book" icon="el-icon-plus" size="mini">预订</el-button>
+        <el-button
+          v-has="{fun:'add'}"
+          type="success"
+          @click="btn_add_book"
+          icon="el-icon-plus"
+          size="mini"
+        >预订</el-button>
       </template>
     </query-bar>
     <el-table :data="list">
@@ -32,7 +38,11 @@
               <i class="el-icon-setting" style="font-size:16px;"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click.native="book_edit(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item
+                v-has="{fun:'edit'}"
+                v-if="scope.row.status === 1"
+                @click.native="book_edit(scope.row)"
+              >编辑</el-dropdown-item>
               <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
               <el-dropdown-item
                 v-has="{fun:'agree'}"
@@ -73,7 +83,7 @@
         <fieldset>
           <legend>预订基本信息</legend>
           <el-form-item label="邮轮" prop="shipno">
-            <el-select v-model="form.shipno" style="width:100%">
+            <el-select v-model="form.shipno" style="width:100%" @change="shipno_change_handle">
               <el-option
                 v-for="item in shiplist"
                 :key="item.code"
@@ -115,14 +125,15 @@
         <fieldset>
           <legend>客房信息</legend>
           <el-row class="trow">
-            <el-col :lg="6" :sm="4" class="thead">房型</el-col>
-            <el-col :lg="4" :sm="3" class="thead">单价</el-col>
+            <el-col :lg="5" :sm="4" class="thead">房型</el-col>
+            <el-col :lg="3" :sm="3" class="thead">单价</el-col>
+            <el-col :lg="4" :sm="3" class="thead">收客价</el-col>
             <el-col :lg="5" :sm="8" class="thead">数量</el-col>
-            <el-col :lg="5" :sm="3" class="thead">金额</el-col>
+            <el-col :lg="3" :sm="3" class="thead">金额</el-col>
             <el-col :lg="4" :sm="6" class="thead">操作</el-col>
           </el-row>
           <el-row v-for="(item,index) in form.details" :key="index">
-            <el-col :lg="6" :sm="4">
+            <el-col :lg="5" :sm="4">
               <el-select
                 v-model="item.roomtypeid"
                 size="small"
@@ -137,7 +148,16 @@
                 >{{sitem.name}}</el-option>
               </el-select>
             </el-col>
-            <el-col :lg="4" :sm="3" style="text-align: center">{{item.price}}&nbsp;</el-col>
+            <el-col :lg="3" :sm="3" style="text-align: center">{{item.price}}&nbsp;</el-col>
+            <el-col :lg="4" :sm="3" style="text-align: center">
+              <el-input
+                v-model="item.customer_price"
+                type="number"
+                placeholder="收客价"
+                @input="change_price($event,index)"
+                size="small"
+              ></el-input>
+            </el-col>
             <el-col :lg="5" :sm="8" style="text-align: center">
               <el-input-number
                 v-model="item.qty"
@@ -147,7 +167,7 @@
                 @change="changqty_handle(index)"
               ></el-input-number>
             </el-col>
-            <el-col :lg="5" :sm="3" style="text-align: center">{{item.amount}}&nbsp;</el-col>
+            <el-col :lg="3" :sm="3" style="text-align: center">{{item.amount}}&nbsp;</el-col>
             <el-col :lg="4" :sm="6" style="text-align: center">
               <el-button type="text" @click="remove_row(index)">删除</el-button>
             </el-col>
@@ -206,6 +226,7 @@
         <el-table :data="bookinfo.details">
           <el-table-column label="房型名称" prop="roomtype.name"></el-table-column>
           <el-table-column label="单价" prop="price"></el-table-column>
+          <el-table-column label="收客价" prop="customer_price"></el-table-column>
           <el-table-column label="数量" prop="qty"></el-table-column>
           <el-table-column label="金额">
             <template slot-scope="scope">{{scope.row.price * scope.row.qty}}</template>
@@ -294,7 +315,7 @@ export default {
   },
   mounted() {
     this.getshiplist();
-    this.getroomtypelist();
+    //this.getroomtypelist();
     this.getlist();
   },
   methods: {
@@ -321,8 +342,17 @@ export default {
       });
     },
     getroomtypelist() {
-      HotelFn.roomtypelist().then(res => {
-        this.roomtypelist = res.result;
+      HotelFn.get_ship_roomtype_list({
+        shipno: this.form.shipno
+      }).then(res => {
+        this.roomtypelist = res.result.map(i => {
+          return {
+            id: i.roomtypeid,
+            name: i.roomtypename.name,
+            price: i.price,
+            customer_price: i.roomtypename.price
+          };
+        });
       });
     },
     getlist() {
@@ -334,7 +364,6 @@ export default {
       });
     },
     querydata(data) {
-      console.log(data);
       this.pageindex = 1;
       this.queryform = data;
       this.getlist();
@@ -353,18 +382,23 @@ export default {
       console.log(index);
       this.form.details.splice(index, 1);
     },
+    calc_amount(index) {
+      let amount =
+        parseFloat(this.form.details[index].customer_price) *
+        parseFloat(this.form.details[index].qty);
+      this.form.details[index].amount = amount;
+    },
     choose_room(index) {
       let typeid = this.form.details[index].roomtypeid;
       let obj = this.roomtypelist.filter(function(i) {
         return i.id === typeid;
       });
-      let amount =
-        parseFloat(obj[0].price) * parseFloat(this.form.details[index].qty);
       this.form.details[index].price = obj[0].price;
-      this.form.details[index].amount = amount;
+      this.form.details[index].customer_price = obj[0].price;
+      this.calc_amount(index);
     },
     changqty_handle(index) {
-      this.choose_room(index);
+      this.calc_amount(index);
     },
     submit_book_data() {
       this.$refs.form.validate(v => {
@@ -449,7 +483,17 @@ export default {
         });
       });
     },
+    shipno_change_handle() {
+      this.getroomtypelist();
+    },
+    customer_price_handle(index) {
+      this.calc_amount(index);
+    },
     change(e) {
+      this.$forceUpdate();
+    },
+    change_price(e, index) {
+      this.calc_amount(index);
       this.$forceUpdate();
     }
   }

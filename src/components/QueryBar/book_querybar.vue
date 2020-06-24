@@ -37,16 +37,22 @@
           <el-input v-model="form.name" placeholder="联系人" size="mini" clearable></el-input>
         </el-col>
         <el-col :span="3">
-          <el-select v-model="form.shipno" placeholder="邮轮编号" size="mini" clearable>
+          <el-select
+            v-if="userinfo.orgtype!=='05'"
+            v-model="form.agentid"
+            placeholder="选择代理商"
+            size="mini"
+            clearable
+          >
             <el-option
-              v-for="item in shiplist"
-              :key="item.code"
-              :value="item.code"
+              v-for="item in agents"
+              :key="item.id"
+              :value="item.id"
               :label="item.name"
             >{{item.name}}</el-option>
           </el-select>
         </el-col>
-        <el-col :span="5" style="text-align:right;">
+        <el-col :span="5" style="margin-top:-7px">
           <el-button type="primary" size="mini" icon="el-icon-search" @click="searh">查询</el-button>
           <slot name="query_btn"></slot>
         </el-col>
@@ -57,9 +63,16 @@
 
 <script>
 import { parseTime } from "@/utils/index";
+import { getUserInfo } from "@/utils/auth";
 export default {
   props: {
     shiplist: {
+      type: Array,
+      default: () => {
+        return [];
+      }
+    },
+    agents: {
       type: Array,
       default: () => {
         return [];
@@ -73,16 +86,16 @@ export default {
         checkoutdate: [],
         tel: "",
         name: "",
-        shipno: ""
-      }
+        shipno: "",
+        agentid: ""
+      },
+      userinfo: {}
     };
   },
   mounted() {
-    let date = new Date();
-    let strdate1 =
-      date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-    this.form.checkindate.push(parseTime(strdate1, "{y}-{m}-{d}"));
-    this.form.checkindate.push(parseTime(strdate1, "{y}-{m}-{d}"));
+    this.userinfo = JSON.parse(getUserInfo());
+    this.form.checkindate.push(parseTime(new Date(), "{y}-{m}-{d}"));
+    this.form.checkindate.push(parseTime(new Date(), "{y}-{m}-{d}"));
   },
   methods: {
     searh() {

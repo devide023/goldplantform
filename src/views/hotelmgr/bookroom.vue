@@ -1,6 +1,7 @@
+import { re } from '@vue/test-utils';
 <template>
   <div>
-    <query-bar @query="querydata" :shiplist="shiplist">
+    <query-bar ref="querybar" :shiplist="shiplist" :agents="agentlist" @query="querydata">
       <template #query_btn>
         <el-button
           v-has="{fun:'add'}"
@@ -9,32 +10,35 @@
           icon="el-icon-plus"
           size="mini"
         >预订</el-button>
+        <el-button type="text" @click="tongji_qty">统计</el-button>
       </template>
     </query-bar>
-    <el-table :data="list">
-      <el-table-column label="状态">
+    <el-table :data="list" border stripe>
+      <el-table-column label="状态" width="60">
         <template slot-scope="scope">
           <el-tag :type="typename(scope.row.status)">{{scope.row.statusname.name}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="入住日期">
+      <el-table-column label="入住日期" width="60">
         <template slot-scope="scope">{{scope.row.bdate|formatdate}}</template>
       </el-table-column>
-      <el-table-column label="退房日期">
+      <el-table-column label="退房日期" width="60">
         <template slot-scope="scope">{{scope.row.edate|formatdate}}</template>
       </el-table-column>
-      <el-table-column label="预订人" prop="bookname"></el-table-column>
-      <el-table-column label="联系电话" prop="booktel"></el-table-column>
-      <el-table-column label="用房明细">
+      <el-table-column label="预订人" prop="bookname" width="60"></el-table-column>
+      <el-table-column label="联系电话" prop="booktel" width="100"></el-table-column>
+      <el-table-column label="用房明细" width="180">
         <template slot-scope="scope">
-          <span style="font-size:15px;color:red;">{{statics_qty(scope.row.details)}}</span>
+          <span style="color:red;">{{statics_qty(scope.row.details)}}</span>
         </template>
       </el-table-column>
-      <el-table-column label="人数" prop="bookcount"></el-table-column>
-      <el-table-column label="费用" prop="amount"></el-table-column>
+      <el-table-column label="人数" prop="bookcount" width="40"></el-table-column>
+      <el-table-column label="费用" prop="amount" width="60"></el-table-column>
       <el-table-column label="备注" prop="booknote"></el-table-column>
-      <el-table-column label="预订人" prop="addusername.name"></el-table-column>
-      <el-table-column label="预订时间" prop="addtime"></el-table-column>
+      <el-table-column label="操作人" prop="addusername.name" width="60"></el-table-column>
+      <el-table-column label="操作时间" width="80">
+        <template slot-scope="scope">{{scope.row.addtime|formatdate}}</template>
+      </el-table-column>
       <el-table-column label="操作" width="50" fixed="right">
         <template slot-scope="scope">
           <el-dropdown>
@@ -238,6 +242,17 @@
         </el-table>
       </fieldset>
     </el-dialog>
+
+    <el-dialog :title="dialogtitle" :visible.sync="dialogtjshow" top="10px">
+      <ul class="ul">
+        <li class="li">人数：{{sumlist.personqty}}</li>
+        <li
+          class="li"
+          v-for="item in roomtypelist"
+          :key="item.id"
+        >{{item.name}}：{{show_roomtype_qty(item.id)}}</li>
+      </ul>
+    </el-dialog>
   </div>
 </template>
 
@@ -245,6 +260,8 @@
 import HotelFn from "@/api/hotel/index";
 import QueryBar from "@/components/QueryBar/book_querybar";
 import { parseTime } from "@/utils/index";
+import ReportFn from "@/api/hotel/report";
+import { getUserInfo } from "@/utils/auth";
 export default {
   components: {
     "query-bar": QueryBar
@@ -252,7 +269,7 @@ export default {
   filters: {
     formatdate: function(value) {
       if (value) {
-        return parseTime(value, "{y}-{m}-{d}");
+        return parseTime(value, "{m}-{d}");
       } else {
         return value;
       }
@@ -263,9 +280,12 @@ export default {
       dialogshow: false,
       dialogtitle: "客房预订",
       dialogviewshow: false,
+      dialogtjshow: false,
       shiplist: [],
       roomtypelist: [],
       list: [],
+      sumlist: [],
+      agentlist: [],
       queryform: {},
       form: {
         hoteldate: [],
@@ -273,6 +293,7 @@ export default {
         details: []
       },
       bookinfo: {},
+      userinfo: {},
       rules: {
         shipno: [
           {
@@ -320,6 +341,8 @@ export default {
   mounted() {
     this.getshiplist();
     //this.getroomtypelist();
+    this.userinfo = JSON.parse(getUserInfo());
+    this.getagentlist();
     this.getlist();
   },
   methods: {
@@ -343,6 +366,11 @@ export default {
     getshiplist() {
       HotelFn.shiplist().then(res => {
         this.shiplist = res.result;
+      });
+    },
+    getagentlist() {
+      HotelFn.agentlist().then(res => {
+        this.agentlist = res.result;
       });
     },
     getroomtypelist() {
@@ -445,6 +473,7 @@ export default {
       this.form.hoteldate = [];
       this.form.hoteldate.push(parseTime(row.bdate, "{y}-{m}-{d}"));
       this.form.hoteldate.push(parseTime(row.edate, "{y}-{m}-{d}"));
+      this.getroomtypelist();
       this.dialogtitle = "编辑预订信息";
       this.dialogshow = true;
     },
@@ -506,17 +535,64 @@ export default {
         str = str + i.roomtype.shortname + "：" + i.qty + " ";
       });
       return str;
+    },
+    tongji_qty() {
+      this.form.shipno = "05";
+      this.getroomtypelist();
+      let querydata = {};
+      let comdata = this.$refs.querybar.$data.form;
+      querydata.rq = comdata.checkindate
+        ? comdata.checkindate[0]
+        : parseTime(new Date(), "{y}-{m}-{d}");
+      if (this.userinfo.orgtype === "05") {
+        querydata.agentid = this.userinfo.orgid;
+      }
+      ReportFn.current_bookqty(querydata).then(res => {
+        this.sumlist = res.result;
+        this.dialogtitle = "当日用房统计";
+        this.dialogtjshow = true;
+      });
+    },
+    show_roomtype_qty(roomtypeid) {
+      if (this.sumlist.roomtypeqty) {
+        let f = this.sumlist.roomtypeqty.filter(i => {
+          return i.roomtypeid === roomtypeid;
+        });
+        if (f.length > 0) {
+          return f[0].qty;
+        } else {
+          return 0;
+        }
+      } else {
+        return 0;
+      }
     }
   }
 };
 </script>
 
 <style>
+.el-table {
+  color: black;
+  font-size: 12px;
+}
+.el-table .cell {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  line-height: normal;
+}
+.el-tag {
+  height: 25px;
+  line-height: 25px;
+}
 .el-dialog__body {
   padding-top: 0px;
 }
 .el-form-item {
   margin-bottom: 0px;
+}
+.el-table td {
+  padding: 0px;
 }
 .trow {
   height: 30px;
@@ -532,5 +608,16 @@ export default {
   font-size: 13px;
   text-align: right;
   padding-right: 10px;
+}
+.ul {
+  padding: 0px;
+  margin: 0px;
+  list-style: none;
+  padding-bottom: 40px;
+}
+.ul .li {
+  float: left;
+  margin-right: 10px;
+  margin-bottom: 5px;
 }
 </style>

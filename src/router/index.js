@@ -54,7 +54,7 @@ if (routedata) {
   user_routes = get_userroutes(routedata);
 }
 const createRouter = () => new Router({
-  mode: 'history', // require service support
+  mode: 'hash', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes.concat(user_routes)
 });

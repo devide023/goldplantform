@@ -17,7 +17,13 @@
           :label="item.name"
         >{{item.name}}</el-option>
       </el-select>
-      <el-select v-model="searchform.agentid" placeholder="请选择代理商" clearable size="mini">
+      <el-select
+        v-model="searchform.agentid"
+        v-if="userinfo.orgtype !=='05'"
+        placeholder="请选择代理商"
+        clearable
+        size="mini"
+      >
         <el-option
           v-for="item in agentlist"
           :key="item.id"
@@ -77,6 +83,7 @@ export default {
     };
   },
   mounted() {
+    this.userinfo = JSON.parse(getUserInfo());
     let d1 = parseTime(new Date(), "{y}-{m}-{d}");
     this.searchform.date.push(d1);
     this.searchform.date.push(d1);
@@ -97,21 +104,17 @@ export default {
       });
     },
     getagentlist() {
-      let userinfo = JSON.parse(getUserInfo());
-      if (userinfo.orgtyp === "05") {
-        HotelFn.agentlist({ id: userinfo.orgid }).then(res => {
-          this.agentlist = res.result;
-        });
-      } else {
-        HotelFn.agentlist().then(res => {
-          this.agentlist = res.result;
-        });
+      let querydata = {};
+      if (this.userinfo.orgtype === "05") {
+        querydata.id = this.userinfo.orgid;
       }
+      HotelFn.agentlist(querydata).then(res => {
+        this.agentlist = res.result;
+      });
     },
     getlist() {
-      let userinfo = JSON.parse(getUserInfo());
-      if (userinfo.orgtyp === "05") {
-        this.searchform.agentid = userinfo.orgid;
+      if (this.userinfo.orgtype === "05") {
+        this.searchform.agentid = this.userinfo.orgid;
       }
       ReportFn.bookroom_report(this.searchform).then(res => {
         this.list = res.result;

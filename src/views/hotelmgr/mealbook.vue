@@ -16,11 +16,18 @@
     </div>
     <el-table :data="list">
       <el-table-column label="状态">
-        <template slot-scope="scope">{{scope.row.status|statusname}}</template>
+        <template slot-scope="scope">
+          <el-tag :type="typename(scope.row.status)">{{scope.row.statusname.name}}</el-tag>
+        </template>
       </el-table-column>
-      <el-table-column label="邮轮" prop="shipname.name"></el-table-column>
+      <el-table-column label="用餐时间" prop="mealdate"></el-table-column>
       <el-table-column label="预订人" prop="bookname"></el-table-column>
       <el-table-column label="联系电话" prop="booktel"></el-table-column>
+      <el-table-column label="用餐描述">
+        <template slot-scope="scope">
+          <span style="color:red">{{showmealinfo(scope.row.details)}}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="费用" prop="amount"></el-table-column>
       <el-table-column label="备注" prop="booknote"></el-table-column>
       <el-table-column label="操作员" prop="addusername.name"></el-table-column>
@@ -32,8 +39,22 @@
               <i class="el-icon-setting" style="font-size:16px;"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-has="{fun:'edit'}" @click.native="edit_mealbook(scope.row)">编辑</el-dropdown-item>
+              <el-dropdown-item
+                v-has="{fun:'edit'}"
+                v-if="scope.row.status === 1"
+                @click.native="edit_mealbook(scope.row)"
+              >编辑</el-dropdown-item>
               <el-dropdown-item @click.native="view_mealbook(scope.row)">详情</el-dropdown-item>
+              <el-dropdown-item
+                v-has="{fun:'agree'}"
+                v-if="scope.row.status === 1"
+                @click.native="book_ok(scope.row)"
+              >确定</el-dropdown-item>
+              <el-dropdown-item
+                v-if="scope.row.status === 1"
+                v-has="{fun:'disagree'}"
+                @click.native="book_disagree(scope.row)"
+              >拒绝</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -221,6 +242,23 @@ export default {
     this.getlist();
   },
   methods: {
+    typename(status) {
+      let colorname = "";
+      switch (status) {
+        case 1:
+          colorname = "success";
+          break;
+        case 2:
+          colorname = "primary";
+          break;
+        case 3:
+          colorname = "danger";
+          break;
+        default:
+          break;
+      }
+      return colorname;
+    },
     getshiplist() {
       HotelFn.shiplist().then(res => {
         this.shiplist = res.result;
@@ -315,6 +353,49 @@ export default {
       this.form = row;
       this.dialogtitle = "编辑预订信息";
       this.dialogshow = true;
+    },
+    book_ok(row) {
+      this.$confirm("确认后待确认状态将转为确认状态,是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        HotelFn.book_meal_ok({
+          id: row.id,
+          status: 2
+        }).then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      });
+    },
+    book_disagree(row) {
+      this.$confirm("你确定要拒绝该预订?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        HotelFn.book_meal_ok({
+          id: row.id,
+          status: 3
+        }).then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      });
+    },
+    showmealinfo(list) {
+      let info = "";
+      if (list) {
+        list.forEach(i => {
+          info = info + i.mealname.name + " ";
+        });
+      }
+      return info;
     }
   }
 };

@@ -133,5 +133,12 @@ export default {
             method: 'post',
             data: data
         });
+    },
+    book_meal_ok: (data) => {
+        return request({
+            url: '/hotel/bookmeal_ok',
+            method: 'post',
+            data: data
+        });
     }
 }

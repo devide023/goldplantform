@@ -20,10 +20,10 @@ import { re } from '@vue/test-utils';
         </template>
       </el-table-column>
       <el-table-column label="入住日期" width="60">
-        <template slot-scope="scope">{{scope.row.bdate|formatdate}}</template>
+        <template slot-scope="scope">{{scope.row.bdate}}</template>
       </el-table-column>
       <el-table-column label="退房日期" width="60">
-        <template slot-scope="scope">{{scope.row.edate|formatdate}}</template>
+        <template slot-scope="scope">{{scope.row.edate}}</template>
       </el-table-column>
       <el-table-column label="预订人" prop="bookname" width="60"></el-table-column>
       <el-table-column label="联系电话" prop="booktel" width="100"></el-table-column>
@@ -37,7 +37,7 @@ import { re } from '@vue/test-utils';
       <el-table-column label="备注" prop="booknote"></el-table-column>
       <el-table-column label="操作人" prop="addusername.name" width="60"></el-table-column>
       <el-table-column label="操作时间" width="80">
-        <template slot-scope="scope">{{scope.row.addtime|formatdate}}</template>
+        <template slot-scope="scope">{{scope.row.addtime}}</template>
       </el-table-column>
       <el-table-column label="操作" width="50" fixed="right">
         <template slot-scope="scope">
@@ -381,7 +381,7 @@ export default {
           return {
             id: i.roomtypeid,
             name: i.roomtypename.name,
-            price: i.price,
+            price: i.roomtypename.price,
             customer_price: i.roomtypename.price
           };
         });

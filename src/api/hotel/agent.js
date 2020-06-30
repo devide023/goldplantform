@@ -21,5 +21,33 @@ export default {
             method: 'post',
             data: data
         });
+    },
+    placedatelist: (data) => {
+        return request({
+            url: '/hotel/agentplace_date_list',
+            method: 'get',
+            params: data
+        });
+    },
+    add_placedate: (data) => {
+        return request({
+            url: '/hotel/agentplace_date',
+            method: 'post',
+            data: data
+        });
+    },
+    edit_placedate: (data) => {
+        return request({
+            url: '/hotel/edit_agentplace_date',
+            method: 'post',
+            data: data
+        });
+    },
+    placedate_status: (data) => {
+        return request({
+            url: '/hotel/agentplace_date_status',
+            method: 'post',
+            data: data
+        });
     }
 }

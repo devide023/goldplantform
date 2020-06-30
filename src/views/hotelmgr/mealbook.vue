@@ -73,7 +73,12 @@
             </el-select>
           </el-form-item>
           <el-form-item label="用餐时间" prop="mealdate">
-            <el-date-picker v-model="form.mealdate" placeholder="请选择用餐时间"></el-date-picker>
+            <el-date-picker
+              v-model="form.mealdate"
+              format="yyyy-MM-dd"
+              value-format="yyyy-MM-dd"
+              placeholder="请选择用餐时间"
+            ></el-date-picker>
           </el-form-item>
           <el-form-item label="姓名" prop="bookname">
             <el-input v-model="form.bookname" placeholder="预订人姓名"></el-input>

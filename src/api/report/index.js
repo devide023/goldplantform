@@ -13,5 +13,12 @@ export default {
             method: 'post',
             data: data
         });
+    },
+    agent_dateroombook_qty: (data) => {
+        return request({
+            url: '/hotel/report/agent_date_bookroom',
+            method: 'post',
+            data: data
+        });
     }
 }

@@ -2,7 +2,7 @@
   <div>
     <div class="querybar">
       <el-row>
-        <el-col :span="8">
+        <el-col :span="6" :lg="6" :sm="10">
           <el-date-picker
             v-model="queryform.date"
             type="daterange"
@@ -13,9 +13,10 @@
             format="yyyy-MM-dd"
             clearable
             size="mini"
+            style="width:230px"
           ></el-date-picker>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="4" :lg="4" :sm="6">
           <el-button type="primary" icon="el-icon-search" size="mini" @click="querydata">查询</el-button>
         </el-col>
       </el-row>

@@ -2,6 +2,18 @@
   <div>
     <div class="querybar">
       <el-row>
+        <el-date-picker
+          v-model="queryform.mealdate"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="用餐时间"
+          end-placeholder="用餐时间"
+          value-format="yyyy-MM-dd"
+          format="yyyy-MM-dd"
+          clearable
+          size="mini"
+          style="width:230px"
+        ></el-date-picker>
         <el-input v-model="queryform.name" placeholder="预订人" style="width:200px" size="mini"></el-input>
         <el-input v-model="queryform.tel" placeholder="联系电话" style="width:200px" size="mini"></el-input>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="querydata">查询</el-button>

@@ -1,5 +1,3 @@
-import { render } from 'node-sass';
-import { re } from '@vue/test-utils';
 <template>
   <div>
     <query-bar ref="querybar" :shiplist="shiplist" :agents="agentlist" @query="querydata">

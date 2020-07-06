@@ -410,7 +410,6 @@ export default {
       this.pageindex = 1;
       this.queryform = data;
       this.getlist();
-      this.getexceldata();
     },
     btn_add_book() {
       this.dialogshow = true;
@@ -579,6 +578,7 @@ export default {
       }
     },
     async getexceldata() {
+      const _this = this;
       const res = await HotelFn.book_room_list({
         pageindex: 1,
         pagesize: 65536,
@@ -596,13 +596,14 @@ export default {
           bookname: i.bookname,
           booktel: i.booktel,
           bookcnt: i.bookcount,
-          roominfo: "a",
+          roominfo: _this.statics_qty(i.details),
           booknote: i.booknote,
           agentname: i.addusername.name
         };
       });
     },
-    exportexcel() {
+    async exportexcel() {
+      await this.getexceldata();
       if (this.excellist.length > 0) {
         this.exportloading = true;
         const tHeader = [

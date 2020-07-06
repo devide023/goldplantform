@@ -1,3 +1,4 @@
+import { render } from 'node-sass';
 import { re } from '@vue/test-utils';
 <template>
   <div>
@@ -9,8 +10,16 @@ import { re } from '@vue/test-utils';
           @click="btn_add_book"
           icon="el-icon-plus"
           size="mini"
+          style="margin-left:0px"
         >预订</el-button>
-        <el-button type="text" @click="tongji_qty">统计</el-button>
+        <el-button type="text" @click="tongji_qty" style="margin-left:0px">统计</el-button>
+        <el-button
+          v-has="{fun:'export'}"
+          :loading="exportloading"
+          type="text"
+          @click="exportexcel"
+          style="margin-left:0px"
+        >导出</el-button>
       </template>
     </query-bar>
     <el-table :data="list" border stripe>
@@ -281,9 +290,11 @@ export default {
       dialogtitle: "客房预订",
       dialogviewshow: false,
       dialogtjshow: false,
+      exportloading: false,
       shiplist: [],
       roomtypelist: [],
       list: [],
+      excellist: [],
       sumlist: [],
       agentlist: [],
       queryform: {},
@@ -399,6 +410,7 @@ export default {
       this.pageindex = 1;
       this.queryform = data;
       this.getlist();
+      this.getexceldata();
     },
     btn_add_book() {
       this.dialogshow = true;
@@ -411,7 +423,6 @@ export default {
       });
     },
     remove_row(index) {
-      console.log(index);
       this.form.details.splice(index, 1);
     },
     calc_amount(index) {
@@ -566,6 +577,81 @@ export default {
       } else {
         return 0;
       }
+    },
+    async getexceldata() {
+      const res = await HotelFn.book_room_list({
+        pageindex: 1,
+        pagesize: 65536,
+        checkindate: this.queryform.checkindate,
+        checkoutdate: this.queryform.checkoutdate,
+        tel: this.queryform.tel,
+        name: this.queryform.name,
+        agentid: this.queryform.agentid
+      });
+      this.excellist = res.result.data.map(i => {
+        return {
+          status: i.statusname.name,
+          bdate: parseTime(i.bdate),
+          edate: parseTime(i.edate),
+          bookname: i.bookname,
+          booktel: i.booktel,
+          bookcnt: i.bookcount,
+          roominfo: "a",
+          booknote: i.booknote,
+          agentname: i.addusername.name
+        };
+      });
+    },
+    exportexcel() {
+      if (this.excellist.length > 0) {
+        this.exportloading = true;
+        const tHeader = [
+          "状态",
+          "入住日期",
+          "退房日期",
+          "预订人",
+          "联系电话",
+          "人数",
+          "用房",
+          "备注",
+          "代理商"
+        ];
+        const filterVal = [
+          "status",
+          "bdate",
+          "edate",
+          "bookname",
+          "booktel",
+          "bookcnt",
+          "roominfo",
+          "booknote",
+          "agentname"
+        ];
+        const data = this.formatJson(filterVal, this.excellist);
+        import("@/vendor/Export2Excel").then(excel => {
+          excel.export_json_to_excel({
+            header: tHeader, //表头 必填
+            data, //具体数据 必填
+            filename: "roombook_list", //非必填
+            autoWidth: true, //非必填
+            bookType: "xls" //非必填
+          });
+          this.exportloading = false;
+        });
+      } else {
+        this.$message.error("请先查询数据");
+      }
+    },
+    formatJson(filterVal, jsonData) {
+      return jsonData.map(v =>
+        filterVal.map(j => {
+          if (j === "bdate" || j === "edate") {
+            return parseTime(v[j]);
+          } else {
+            return v[j];
+          }
+        })
+      );
     }
   }
 };

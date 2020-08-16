@@ -3,7 +3,7 @@ import Router from 'vue-router'
 Vue.use(Router)
 
 /* Layout */
-import Layout from '@/layout'
+
 import { getMenus } from '@/utils/auth';
 import { get_userroutes } from '@/router/userroute';
 /**
@@ -41,12 +41,11 @@ export const constantRoutes = [
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
-  },
-
-  {
+  }/*, {
     path: '/',
-    component: Layout
-  }
+    component: Layout,
+    hidden: true
+  }*/
 ]
 let routedata = JSON.parse(getMenus());
 let user_routes = [];

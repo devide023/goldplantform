@@ -85,6 +85,13 @@ export default {
             data: data
         });
     },
+    book_room_unaudit: (data) => {
+        return request({
+            url: '/hotel/bookroom_unaudit',
+            method: 'post',
+            data: data
+        });
+    },
     edit_book_room: (data) => {
         return request({
             url: '/hotel/edit_bookroom',
@@ -137,6 +144,13 @@ export default {
     book_meal_ok: (data) => {
         return request({
             url: '/hotel/bookmeal_ok',
+            method: 'post',
+            data: data
+        });
+    },
+    book_meal_unaudit: (data) => {
+        return request({
+            url: '/hotel/bookmeal_unaudit',
             method: 'post',
             data: data
         });

@@ -1,9 +1,9 @@
 import { setUserInfo } from '../../utils/auth';
 import { login, logout, getInfo } from '@/api/user'
 import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
-import router from '@/router/index';
-import { resetRouter, constantRoutes } from '@/router';//constantRoutes
-import { get_userroutes } from '@/router/userroute';
+//import router from '@/router/index';
+import { resetRouter } from '@/router';//constantRoutes
+//import { get_userroutes } from '@/router/userroute';
 const getDefaultState = () => {
   return {
     token: getToken(),
@@ -75,10 +75,10 @@ const actions = {
         commit('SET_COMPANYID', response.user.companyid[0])
         commit('SET_ORGID', response.user.orgid[0])
         commit('SET_USERID', response.user.userid)
-        let routelist = get_userroutes(response.menulist)
-        let allroutes = constantRoutes.concat(routelist)
-        router.addRoutes(allroutes);
-        router.options.routes = allroutes;
+        //let routelist = get_userroutes(response.menulist)
+        //let allroutes = constantRoutes.concat(routelist)
+        //router.addRoutes(allroutes);
+        //router.options.routes = allroutes;
         resolve(response.user)
       }).catch(error => {
         reject(error)

@@ -54,21 +54,27 @@
             </span>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
+                v-show="scope.row.status === 1"
                 v-has="{fun:'edit'}"
-                v-if="scope.row.status === 1"
                 @click.native="book_edit(scope.row)"
               >编辑</el-dropdown-item>
-              <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
+
               <el-dropdown-item
+                v-show="scope.row.status === 1"
                 v-has="{fun:'agree'}"
-                v-if="scope.row.status === 1"
                 @click.native="book_ok(scope.row)"
               >确定</el-dropdown-item>
               <el-dropdown-item
-                v-if="scope.row.status === 1"
+                v-show="scope.row.status === 1"
                 v-has="{fun:'disagree'}"
                 @click.native="book_disagree(scope.row)"
-              >拒绝</el-dropdown-item>
+              >取消</el-dropdown-item>
+              <el-dropdown-item
+                v-show="scope.row.status === 2"
+                v-has="{fun:'unaudit'}"
+                @click.native="book_unaudit(scope.row)"
+              >反审核</el-dropdown-item>
+              <el-dropdown-item @click.native="book_view(scope.row)">查看</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -79,11 +85,11 @@
       :current-page="pageindex"
       :page-size="pagesize"
       :page-sizes="[15,30,50, 100, 200]"
-      @current-change="handleCurrentChange"
       layout="total, sizes, prev, pager, next"
-      @size-change="handleSizeChange"
       background
       style="text-align:right;"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
     ></el-pagination>
 
     <el-dialog :title="dialogtitle" :visible.sync="dialogshow" top="10px">
@@ -447,8 +453,8 @@ export default {
             HotelFn.edit_book_room(this.form).then(res => {
               this.$message.info(res.msg);
               if (res.code === 1) {
-                this.dialogshow = false;
                 this.getlist();
+                this.dialogshow = false;
               }
             });
           } else {
@@ -516,6 +522,22 @@ export default {
         HotelFn.book_room_ok({
           id: row.id,
           status: 3
+        }).then(res => {
+          this.$message.info(res.msg);
+          if (res.code === 1) {
+            this.getlist();
+          }
+        });
+      });
+    },
+    book_unaudit(row) {
+      this.$confirm("你确定要反审核该预订?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        HotelFn.book_room_unaudit({
+          id: row.id
         }).then(res => {
           this.$message.info(res.msg);
           if (res.code === 1) {

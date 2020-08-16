@@ -4,12 +4,21 @@ export function get_userroutes(menulist) {
     return item.pid === 0;
   });
   root.forEach((item) => {
+    const haschild = menulist.filter((sitem) => {
+      return sitem.pid === item.id
+    });
     let mitem = {};
     if (item.path === '/') {
       mitem = {
         path: item.path,
-        component: '@/layout/index.vue',
-        hidden: true
+        name: item.code,
+        component: () => import('@/layout/index.vue'),
+        hidden: true,
+        redirect: haschild.length > 0 ? '/' + haschild[0].path : '/',
+        meta: {
+          title: item.title,
+          icon: item.icon
+        }
       }
     } else {
       mitem = {
@@ -22,9 +31,7 @@ export function get_userroutes(menulist) {
         }
       };
     }
-    const haschild = menulist.filter((sitem) => {
-      return sitem.pid === item.id
-    });
+
     if (haschild.length > 0) {
       mitem.children = submenu(menulist, item);
     }

@@ -14,5 +14,12 @@ export default {
       method: 'get',
       params: data
     });
+  },
+  agent_date_book_cnt: (data) => {
+    return request({
+      url: '/echarts/agentroombookcnt',
+      method: 'get',
+      params: data
+    });
   }
 }

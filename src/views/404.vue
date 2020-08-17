@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { removeToken } from "@/utils/auth";
+import { removeToken, removeMenus, removeUserInfo } from "@/utils/auth";
 export default {
   name: "Page404",
   computed: {
@@ -56,6 +56,8 @@ export default {
   },
   mounted() {
     removeToken();
+    removeMenus();
+    removeUserInfo();
   }
 };
 </script>

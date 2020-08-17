@@ -1,9 +1,26 @@
-import { setUserInfo } from '../../utils/auth';
-import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken, removeMenus, setMenus } from '@/utils/auth'
-//import router from '@/router/index';
-import { resetRouter } from '@/router';//constantRoutes
-//import { get_userroutes } from '@/router/userroute';
+import {
+  setUserInfo
+} from '../../utils/auth';
+import {
+  login,
+  logout,
+  getInfo
+} from '@/api/user'
+import {
+  getToken,
+  setToken,
+  removeToken,
+  removeMenus,
+  setMenus,
+  removeUserInfo
+} from '@/utils/auth'
+import router from '@/router/index';
+import {
+  resetRouter
+} from '@/router';
+import {
+  get_userroutes
+} from '@/router/userroute';
 const getDefaultState = () => {
   return {
     token: getToken(),
@@ -47,10 +64,18 @@ const mutations = {
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
+  login({
+    commit
+  }, userInfo) {
+    const {
+      username,
+      password
+    } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
+      login({
+        username: username.trim(),
+        password: password
+      }).then(response => {
         setToken(response.token)
         commit('SET_TOKEN', response.token);
         resolve()
@@ -60,7 +85,10 @@ const actions = {
     })
   },
   // get user info
-  getInfo({ commit, state }) {
+  getInfo({
+    commit,
+    state
+  }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
         if (!response) {
@@ -75,10 +103,9 @@ const actions = {
         commit('SET_COMPANYID', response.user.companyid[0])
         commit('SET_ORGID', response.user.orgid[0])
         commit('SET_USERID', response.user.userid)
-        //let routelist = get_userroutes(response.menulist)
-        //let allroutes = constantRoutes.concat(routelist)
-        //router.addRoutes(allroutes);
-        //router.options.routes = allroutes;
+        let routelist = get_userroutes(response.menulist)
+        router.addRoutes(routelist);
+        router.options.routes = routelist;
         resolve(response.user)
       }).catch(error => {
         reject(error)
@@ -86,11 +113,15 @@ const actions = {
     })
   },
   // user logout
-  logout({ commit, state }) {
+  logout({
+    commit,
+    state
+  }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         removeToken() // must remove  token  first
         removeMenus()
+        removeUserInfo()
         resetRouter()
         commit('RESET_STATE')
         resolve()
@@ -101,7 +132,9 @@ const actions = {
   },
 
   // remove token
-  resetToken({ commit }) {
+  resetToken({
+    commit
+  }) {
     return new Promise(resolve => {
       removeToken() // must remove  token  first
       commit('RESET_STATE')
@@ -116,4 +149,3 @@ export default {
   mutations,
   actions
 }
-

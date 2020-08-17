@@ -14,7 +14,7 @@ export function get_userroutes(menulist) {
         name: item.code,
         component: () => import('@/layout/index.vue'),
         hidden: true,
-        redirect: haschild.length > 0 ? '/' + haschild[0].path : '/',
+        redirect: haschild.length > 0 ? '/' + haschild[0].path : '',
         meta: {
           title: item.title,
           icon: item.icon

@@ -27,6 +27,9 @@ export function getUserInfo() {
 export function removeMenus() {
   return sessionStorage.removeItem(MenuKey)
 }
+export function removeUserInfo() {
+  return sessionStorage.removeItem(UserInfoKey)
+}
 export function removeToken() {
   return Cookies.remove(TokenKey)
 }

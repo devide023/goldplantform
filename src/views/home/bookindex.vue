@@ -134,7 +134,6 @@ export default {
             name: "房间数"
           }
         ];
-        console.log(serdata);
         this.agentoption.series = serdata;
         this.agentchart.setOption(this.agentoption);
       });

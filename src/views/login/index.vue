@@ -62,7 +62,7 @@
 
 <script>
 import { validUsername } from "@/utils/validate";
-import { removeToken } from "@/utils/auth";
+import { removeToken, removeMenus, removeUserInfo } from "@/utils/auth";
 export default {
   name: "Login",
   data() {
@@ -108,6 +108,8 @@ export default {
   },
   mounted() {
     removeToken();
+    removeMenus();
+    removeUserInfo();
   },
   methods: {
     showPwd() {

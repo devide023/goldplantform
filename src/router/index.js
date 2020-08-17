@@ -3,9 +3,13 @@ import Router from 'vue-router'
 Vue.use(Router)
 
 /* Layout */
-
-import { getMenus } from '@/utils/auth';
-import { get_userroutes } from '@/router/userroute';
+//import Layout from '@/layout/index.vue';
+// import {
+//   getMenus
+// } from '@/utils/auth';
+// import {
+//   get_userroutes
+// } from '@/router/userroute';
 /**
  * Note: sub-menu only appear when route children.length >= 1
  * Detail see: https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -30,8 +34,7 @@ import { get_userroutes } from '@/router/userroute';
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
-export const constantRoutes = [
-  {
+export const constantRoutes = [{
     path: '/login',
     component: () => import('@/views/login/index'),
     hidden: true
@@ -41,21 +44,24 @@ export const constantRoutes = [
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
-  }/*, {
-    path: '/',
-    component: Layout,
-    hidden: true
-  }*/
+  }
+  /*, {
+      path: '/',
+      component: Layout,
+      hidden: true
+    }*/
 ]
-let routedata = JSON.parse(getMenus());
-let user_routes = [];
-if (routedata) {
-  user_routes = get_userroutes(routedata);
-}
+//let routedata = JSON.parse(getMenus());
+//let user_routes = [];
+//if (routedata) {
+//  user_routes = get_userroutes(routedata);
+//}
 const createRouter = () => new Router({
   mode: 'hash', // require service support
-  scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes.concat(user_routes)
+  scrollBehavior: () => ({
+    y: 0
+  }),
+  routes: constantRoutes
 });
 const router = createRouter();
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
